@@ -7,7 +7,7 @@
     "build": "next lint && next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest --maxWorkers=50% --cache --runInBand",
+    "test": "jest --maxWorkers=50% --cache",
     "test:watch": "jest --watch",
     "test:perf": "jest --runInBand --logHeapUsage"
   },
