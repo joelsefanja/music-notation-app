@@ -2,6 +2,7 @@ import { Section } from '../types';
 import { SectionType, NotationFormat } from '../types/format.types'; 
 import { ChordParser } from '../utils/chord-parser';
 import { AnnotationParser } from './annotation-parser';
+import { Annotation } from '../types/chord.types';
 
 /**
  * Result of section parsing with position information
@@ -578,7 +579,7 @@ export class SectionParser {
    */
   public static mergeSectionsWithAnnotations(
     sections: SectionParseResult[],
-    annotations: { annotation: any; startIndex: number; endIndex: number }[]
+    annotations: { annotation: Annotation; startIndex: number; endIndex: number }[]
   ): SectionParseResult[] {
     return sections.map(sectionResult => {
       // Find annotations that belong to this section

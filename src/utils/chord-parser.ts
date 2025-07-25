@@ -1,5 +1,6 @@
 import { Chord } from '../types';
-import { CHORD_QUALITIES, CHORD_EXTENSIONS, ENHARMONIC_EQUIVALENTS } from '../constants/chord-mappings';
+import { CHORD_QUALITIES, CHORD_EXTENSIONS } from '../constants/chord-mappings';
+import { NashvilleConverter } from './nashville-converter';
 
 /**
  * Utility class for parsing chord strings into structured Chord objects
@@ -157,7 +158,6 @@ export class ChordParser {
 
     try {
       // Use NashvilleConverter to convert both parts
-      const { NashvilleConverter } = require('./nashville-converter');
       
       const [, rootPart, bassPart] = slashMatch;
       const rootChord = NashvilleConverter.nashvilleToChord(rootPart, key);
@@ -165,7 +165,7 @@ export class ChordParser {
       
       const qualityStr = rootChord.quality === 'maj' ? '' : (rootChord.quality === 'min' ? 'm' : rootChord.quality);
       return `${rootChord.root}${qualityStr}${rootChord.extensions.join('')}/${bassChord.root}`;
-    } catch (error) {
+    } catch {
       // If conversion fails, return original
       return nashvilleChord;
     }

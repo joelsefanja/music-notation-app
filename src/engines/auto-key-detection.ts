@@ -1,6 +1,6 @@
 import { Chord } from '../types';
 import { ChordParser } from '../utils/chord-parser';
-import { MAJOR_KEY_SIGNATURES, MINOR_KEY_SIGNATURES, NASHVILLE_MAJOR_MAPPINGS, NASHVILLE_MINOR_MAPPINGS } from '../constants/chord-mappings';
+import { MAJOR_KEY_SIGNATURES, MINOR_KEY_SIGNATURES, NASHVILLE_MAJOR_MAPPINGS } from '../constants/chord-mappings';
 
 /**
  * Result of key detection analysis
@@ -322,10 +322,10 @@ export class AutoKeyDetection {
    * @param totalChords - Total number of chords
    * @param scaleMatches - Number of chords that fit the scale
    * @param progressionMatches - Number of matching progressions
-   * @param tonicIndicators - Number of tonic chord occurrences
+   * @param tonicIndicators - Number of tonic chords
    * @param chordFrequency - Frequency of each chord
-   * @param isMinor - Whether this is a minor key analysis
-   * @returns Confidence score (0-1)
+   * @param isMinor - Whether the key is minor
+   * @returns Confidence score
    */
   private calculateConfidence(
     totalChords: number,
@@ -357,26 +357,24 @@ export class AutoKeyDetection {
     // Additional bonus for characteristic chord patterns
     if (isMinor) {
       // Minor key indicators
-      const minorIndicators = (chordFrequency['1m'] || 0) + (chordFrequency['4m'] || 0) + (chordFrequency['5m'] || 0);
-      const majorIndicators = (chordFrequency['3'] || 0) + (chordFrequency['6'] || 0) + (chordFrequency['7'] || 0);
-      
-      if (minorIndicators > 0) {
-        confidence += (minorIndicators / totalChords) * 0.2;
+      // const minorIndicators = (chordFrequency['1m'] || 0) + (chordFrequency['4m'] || 0) + (chordFrequency['5m'] || 0);
+
+      if ((chordFrequency['1m'] || 0) + (chordFrequency['4m'] || 0) + (chordFrequency['5m'] || 0) > 0) {
+        confidence += ((chordFrequency['1m'] || 0) + (chordFrequency['4m'] || 0) + (chordFrequency['5m'] || 0)) / totalChords * 0.2;
       }
-      
+
       // Bonus if we have the characteristic minor progression chords
       if (chordFrequency['6'] && chordFrequency['7']) {
         confidence += 0.1; // VI-VII is very characteristic of minor keys
       }
     } else {
       // Major key indicators
-      const majorIndicators = (chordFrequency['1'] || 0) + (chordFrequency['4'] || 0) + (chordFrequency['5'] || 0);
-      const minorIndicators = (chordFrequency['2m'] || 0) + (chordFrequency['3m'] || 0) + (chordFrequency['6m'] || 0);
-      
-      if (majorIndicators > 0) {
-        confidence += (majorIndicators / totalChords) * 0.2;
+      // const majorIndicators = (chordFrequency['1'] || 0) + (chordFrequency['4'] || 0) + (chordFrequency['5'] || 0);
+
+      if ((chordFrequency['1'] || 0) + (chordFrequency['4'] || 0) + (chordFrequency['5'] || 0) > 0) {
+        confidence += ((chordFrequency['1'] || 0) + (chordFrequency['4'] || 0) + (chordFrequency['5'] || 0)) / totalChords * 0.2;
       }
-      
+
       // Bonus for I-V-vi-IV or similar major progressions
       if (chordFrequency['1'] && chordFrequency['5'] && chordFrequency['6m']) {
         confidence += 0.1;

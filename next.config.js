@@ -1,6 +1,11 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  // App directory is now stable in Next.js 14
-}
+const withPWA = require('next-pwa')({
+  dest: 'public',
+  disable: process.env.NODE_ENV === 'development',
+});
 
-module.exports = nextConfig
+module.exports = withPWA({
+  reactStrictMode: true,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+});

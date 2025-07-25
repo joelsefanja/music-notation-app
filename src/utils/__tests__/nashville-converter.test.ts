@@ -222,7 +222,6 @@ describe('NashvilleConverter', () => {
     });
 
     it('should maintain chord positions when converting', () => {
-      const chord: Chord = { root: 'C', quality: 'maj', extensions: [], position: 42 };
       const converted = NashvilleConverter.nashvilleToChord('1', 'C');
       
       // Position should be reset to 0 for new chord objects

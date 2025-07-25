@@ -1,6 +1,5 @@
 import { Chord } from '../types';
 import { NASHVILLE_MAJOR_MAPPINGS, NASHVILLE_MINOR_MAPPINGS, MAJOR_KEY_SIGNATURES, MINOR_KEY_SIGNATURES } from '../constants/chord-mappings';
-import { ChordParser } from './chord-parser';
 
 /**
  * Utility class for converting between standard chord notation and Nashville Number System
@@ -29,7 +28,7 @@ export class NashvilleConverter {
     }
 
     // Apply chord quality modifications
-    nashvilleNumber = this.applyQualityToNashville(nashvilleNumber, chord.quality, isMinorKey);
+    nashvilleNumber = this.applyQualityToNashville(nashvilleNumber, chord.quality);
     
     // Add extensions
     if (chord.extensions.length > 0) {
@@ -138,9 +137,9 @@ export class NashvilleConverter {
    * @param isMinorKey - Whether the key is minor
    * @returns Modified Nashville number
    */
-  private static applyQualityToNashville(nashvilleNumber: string, quality: string, isMinorKey: boolean): string {
+  private static applyQualityToNashville(nashvilleNumber: string, quality: string): string {
     // Remove existing quality indicators
-    let cleanNumber = nashvilleNumber.replace(/[m°+]/g, '');
+    const cleanNumber = nashvilleNumber.replace(/[m°+]/g, '');
     
     switch (quality) {
       case 'maj':

@@ -1,17 +1,14 @@
 import { Metadata } from '../types/metadata.types';
-import { SectionType } from '../types/format.types';
 
-/**
- * Represents the parsed result of a ChordPro file.
- */
-export interface ChordProParseResult {
-  /** Metadata extracted from the ChordPro file. */
-  metadata: Metadata;
-  /** The song content with ChordPro directives removed or processed. */
-  cleanedText: string;
-  /** Sections identified within the song (if parsed by this module). */
-  sections: Array<{ type: SectionType; name: string; content: string }>;
-}
+  /**
+   * Represents the parsed result of a ChordPro file.
+   */
+  export interface ChordProParseResult {
+    /** Metadata extracted from the ChordPro file. */
+    metadata: Metadata;
+    /** The song content with ChordPro directives removed or processed. */
+    cleanedText: string;
+  }
 
 /**
  * Parser for handling ChordPro format, including metadata and directives.
@@ -36,7 +33,6 @@ export class ChordProParser {
   public static parse(text: string): ChordProParseResult {
     const metadata: Metadata = {};
     let cleanedText = text;
-    const sections: Array<{ type: SectionType; name: string; content: string }> = [];
 
     // Define directives with their regex and corresponding metadata property
     type MetadataProp = 'title' | 'artist' | 'key' | 'tempo' | 'timeSignature';
@@ -78,7 +74,6 @@ export class ChordProParser {
     return {
       metadata,
       cleanedText,
-      sections: [] // Placeholder, as section parsing is handled by SectionParser
     };
   }
 }

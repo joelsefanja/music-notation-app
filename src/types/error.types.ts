@@ -19,7 +19,7 @@ export interface AppError {
   /** Human-readable error message */
   message: string;
   /** Additional context about the error */
-  context?: any;
+  context?: string;
   /** Whether the error is recoverable */
   recoverable: boolean;
   /** Optional stack trace */

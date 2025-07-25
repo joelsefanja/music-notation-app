@@ -1,5 +1,4 @@
 import { ChordProParser } from '../chordpro-parser';
-import { NotationFormat } from '../../types/format.types';
 
 describe('ChordProParser', () => {
   const sampleChordProText = `
@@ -68,7 +67,6 @@ describe('ChordProParser', () => {
     const result = ChordProParser.parse('');
     expect(result.metadata).toEqual({});
     expect(result.cleanedText).toBe('');
-    expect(result.sections).toEqual([]);
   });
 
   it('should handle text with no ChordPro directives', () => {
