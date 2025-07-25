@@ -1,5 +1,5 @@
-import { Section, type Chord, type Annotation } from '../types'; // Corrected import path
-import { SectionType, NotationFormat } from '../types/format.types'; // Corrected import path
+import { Section } from '../types';
+import { SectionType, NotationFormat } from '../types/format.types'; 
 import { ChordParser } from '../utils/chord-parser';
 import { AnnotationParser } from './annotation-parser';
 
@@ -108,8 +108,8 @@ export class SectionParser {
 
     // Vamp variations
     'vamp': SectionType.VAMP,
-    'vamp out': SectionType.TAG, // This was Vamp, should be Tag in original, keeping original for fix.
-    'vampout': SectionType.TAG // This was Vamp, should be Tag in original, keeping original for fix.
+    'vamp out': SectionType.VAMP,
+    'vampout': SectionType.VAMP
   };
 
   /**
@@ -277,51 +277,63 @@ export class SectionParser {
    */
   private static mapSectionType(sectionName: string): SectionType {
     const normalized = sectionName.toLowerCase().trim();
-
+  
     // 1. Direct mapping (most specific and highest priority)
     const directMappedType = this.SECTION_TYPE_MAPPINGS[normalized];
     if (directMappedType) {
       return directMappedType;
     }
-
+  
     // 2. Pattern matching for common types (if not directly mapped)
-    // Order matters here: more specific patterns should come before more general ones.
+    // Handle specific cases first - these patterns must be exact matches
     if (/^intro(duction)?$/.test(normalized) || /^opening$/.test(normalized)) {
       return SectionType.INTRO;
     }
-    if (/^outro|ending|coda|end$/.test(normalized)) {
+    if (/^outro$/.test(normalized) || /^ending$/.test(normalized) || /^coda$/.test(normalized) || /^end$/.test(normalized)) {
       return SectionType.OUTRO;
     }
-    if (/^pre-?chorus|buildup|build$/.test(normalized)) {
+    if (/^pre-?chorus$/.test(normalized) || /^buildup$/.test(normalized) || /^build$/.test(normalized)) {
       return SectionType.PRE_CHORUS;
     }
     if (/^post-?chorus$/.test(normalized)) {
       return SectionType.POST_CHORUS;
     }
-    if (/^instrumental|solo|guitar solo|piano solo$/.test(normalized)) {
+    if (/^instrumental$/.test(normalized) || /^solo$/.test(normalized) || /^guitar solo$/.test(normalized) || /^piano solo$/.test(normalized)) {
       return SectionType.INSTRUMENTAL;
     }
-    if (/^tag|tag ?out$/.test(normalized)) {
+    if (/^tag$/.test(normalized) || /^tag out$/.test(normalized)) {
       return SectionType.TAG;
     }
-    if (/^vamp|vamp ?out$/.test(normalized)) {
+    if (/^vamp$/.test(normalized) || /^vamp out$/.test(normalized)) {
       return SectionType.VAMP;
     }
     if (/^interlude$/.test(normalized)) {
       return SectionType.INTERLUDE;
     }
-    if (/^chorus\s*\d*$/.test(normalized) || /^c\d*$/.test(normalized) || /^refrain$/.test(normalized)) {
+    
+    // Handle chorus patterns - more specific patterns first
+    // Added explicit check for single 'c'
+    if (/^chorus(\s+\d+)?$/.test(normalized) || /^chorus\d+$/.test(normalized) ||
+        /^c(\s*\d*)$/.test(normalized) ||  // Handles 'c', 'c1', 'c2'
+        /^refrain$/.test(normalized)) {
       return SectionType.CHORUS;
     }
-    if (/^bridge\s*\d*$/.test(normalized) || /^b\d*$/.test(normalized) || /^middle\s*8$/.test(normalized)) {
+    
+    // Handle bridge patterns - more specific patterns first
+    // Added explicit check for single 'b'
+    if (/^bridge(\s+\d+)?$/.test(normalized) || /^bridge\d+$/.test(normalized) ||
+        /^b(\s*\d*)$/.test(normalized) ||  // Handles 'b', 'b1', 'b2'
+        /^middle\s*8$/.test(normalized)) {
       return SectionType.BRIDGE;
     }
-    // This should be after chorus and bridge checks
-    if (/^verse\s*\d*$/.test(normalized) || /^v\d*$/.test(normalized) || /^\d+$/.test(normalized)) {
+    
+    // Handle verse patterns - more specific patterns first
+    if (/^verse(\s+\d+)?$/.test(normalized) || /^verse\d+$/.test(normalized) ||
+        /^v(\s*\d*)$/.test(normalized) ||  // Handles 'v', 'v1', 'v2'
+        /^\d+$/.test(normalized)) {
       return SectionType.VERSE;
     }
-
-
+  
     // Default to verse for unknown sections
     return SectionType.VERSE;
   }

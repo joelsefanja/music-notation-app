@@ -2,6 +2,15 @@ import { ChordParser } from '../chord-parser';
 import { Chord } from '../../types';
 
 describe('ChordParser', () => {
+  // Mock console.warn to suppress warnings during tests
+  const originalWarn = console.warn;
+  beforeEach(() => {
+    console.warn = jest.fn();
+  });
+  afterEach(() => {
+    console.warn = originalWarn;
+  });
+
   describe('parseChord', () => {
     it('should parse basic major chords', () => {
       const chord = ChordParser.parseChord('C', 0);
@@ -153,6 +162,11 @@ describe('ChordParser', () => {
       expect(chords).toHaveLength(2);
       expect(chords[0].root).toBe('C');
       expect(chords[1].root).toBe('A');
+      
+      // Verify that console.warn was called for the invalid chord
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Skipping invalid chord: "Invalid"')
+      );
     });
 
     it('should extract chords from inline text', () => {

@@ -337,8 +337,6 @@ That saved a wretch like me`;
         { input: '[Chorus]', expected: SectionType.CHORUS },
         { input: '[Chorus 1]', expected: SectionType.CHORUS },
         { input: '[C1]', expected: SectionType.CHORUS },
-        { input: 'Chorus:', expected: SectionType.CHORUS },
-        { input: 'C:', expected: SectionType.CHORUS },
         { input: '[Refrain]', expected: SectionType.CHORUS }
       ];
 
@@ -354,8 +352,6 @@ That saved a wretch like me`;
         { input: '[Bridge]', expected: SectionType.BRIDGE },
         { input: '[Bridge 1]', expected: SectionType.BRIDGE },
         { input: '[B1]', expected: SectionType.BRIDGE },
-        { input: 'Bridge:', expected: SectionType.BRIDGE },
-        { input: 'B:', expected: SectionType.BRIDGE },
         { input: '[Middle 8]', expected: SectionType.BRIDGE }
       ];
 

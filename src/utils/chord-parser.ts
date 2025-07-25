@@ -9,7 +9,7 @@ export class ChordParser {
    * Regular expression to match chord components
    * Groups: root, accidental, quality, extensions, slash, bass
    */
-  private static readonly CHORD_REGEX = /^([A-G])([#b]?)([^\/]*?)(?:\/([A-G][#b]?))?$/;
+  private static readonly CHORD_REGEX = /^([A-G])([#b]?)([^/\s]*(?:add\d+|sus\d+|dim|maj|min|m|aug|\+|°|M|m7|maj7|min7|mM7|m7b5|dim7)?)(?:\/([A-G][#b]?))?$/;
 
   /**
    * Parse a chord string into a Chord object
@@ -73,6 +73,7 @@ export class ChordParser {
       if (remaining.startsWith(pattern)) {
         quality = normalizedQuality;
         remaining = remaining.substring(pattern.length);
+        // Break after the first match to avoid multiple quality assignments
         break;
       }
     }
@@ -208,7 +209,8 @@ export class ChordParser {
           chords.push(chord);
         } catch (error) {
           // Skip invalid chords but continue parsing
-          console.warn(`Skipping invalid chord: ${match[1]}`, error);
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          console.warn(`Skipping invalid chord: "${match[1]}". Error: ${errorMessage}`);
         }
       }
     } else {
@@ -224,7 +226,8 @@ export class ChordParser {
           }
         } catch (error) {
           // Skip invalid chords but continue parsing
-          console.warn(`Skipping invalid chord: ${match[1]}`, error);
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          console.warn(`Skipping invalid chord: ${match[1]}. Error: ${errorMessage}`);
         }
       }
     }
