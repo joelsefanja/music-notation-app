@@ -528,7 +528,7 @@ export class SectionParser {
               name: `Verse ${sectionCount}`,
               chords: [],
               annotations: []
-            }, content, NotationFormat.ONSONG); // Implicit sections default to ONSONG for chord extraction
+            }, content, NotationFormat.ONSONG); // Implicit sections default to ONSONG for chord parsing
 
             sections.push({
               section,
@@ -557,7 +557,7 @@ export class SectionParser {
           name: `Verse ${sectionCount}`,
           chords: [],
           annotations: []
-        }, content, NotationFormat.ONSONG); // Implicit sections default to ONSONG for chord extraction
+        }, content, NotationFormat.ONSONG); // Implicit sections default to ONSONG for chord parsing
 
         sections.push({
           section,

@@ -13,6 +13,10 @@ const customJestConfig = {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   testEnvironment: 'jest-environment-jsdom',
+  // Run tests in parallel
+  maxWorkers: 6,
+  // Enable Jest's cache
+  cache: true,
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
