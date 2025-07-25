@@ -52,8 +52,75 @@ describe('AutoKeyDetection', () => {
             expect(result.key).toBe('C');
             expect(result.isMinor).toBe(false);
             expect(result.analysis.progressionMatches).toContain('1-4-5-1');
+    });
+
+    describe('New Song Tests', () => {
+        it('should detect key for Songbook format', () => {
+            const text = `
+            Songbook
+            (Tussenregel met opmerking als aparte regel)
+
+            makefile
+
+            (Opmerking: Houd tempo strak en ritmisch spelen in couplet)
+
+            Verse 1:
+            Cm7
+            U alleen bent waardig Heer
+            Bb
+            Niemand komt U ooit nabij
+            Ab         Eb    Bb
+            U troont in eeuwigheid
+            Cm7
+            U alleen geeft eeuwig leven
+            Bb
+            U bent goed in alles Heer
+            Ab        Eb    Bb
+            U bent onze zekerheid
+        `;
+            const result = detector.detectKey(text, 'inline');
+            expect(result.key).toBe('Eb'); // Expected key
+            expect(result.isMinor).toBe(false); // Eb is a major key
+            expect(result.confidence).toBeGreaterThan(0.5);
+        });
+
+        it('should detect key for OnSong format', () => {
+            const text = `
+            *Opmerking: Houd tempo strak en ritmisch spelen in couplet
+
+            Verse 1:
+            [Cm7]U alleen bent waardig Heer
+            [Bb]Niemand komt U ooit nabij
+            [Ab]U troo[Eb]nt in eeuwi[Bb]gheid
+            [Cm7]U alleen geeft eeuwig leven
+            [Bb]U bent goed in alles Heer
+            [Ab]U ben[Eb]t onze zeker[Bb]heid
+        `;
+            const result = detector.detectKey(text, 'brackets'); // Assuming 'brackets' format
+            expect(result.key).toBe('Eb'); // Expected key
+            expect(result.isMinor).toBe(false); // Eb is a major key
+            expect(result.confidence).toBeGreaterThan(0.5);
+        });
+
+        it('should detect key for Planning Center Online format', () => {
+            const text = `
+            <b>Opmerking: Houd tempo strak en ritmisch spelen in couplet</b>
+
+            Verse 1:
+            [Cm7]U alleen bent waardig Heer
+            [Bb]Niemand komt U ooit nabij
+            [Ab]U troo[Eb]nt in eeuwi[Bb]gheid
+            [Cm7]U alleen geeft eeuwig leven
+            [Bb]U bent goed in alles Heer
+            [Ab]U ben[Eb]t onze zeker[Bb]heid
+        `;
+            const result = detector.detectKey(text, 'brackets'); // Assuming 'brackets' format
+            expect(result.key).toBe('Eb'); // Expected key
+            expect(result.isMinor).toBe(false); // Eb is a major key
+            expect(result.confidence).toBeGreaterThan(0.5);
         });
     });
+});
 
     describe('Minor Key Detection', () => {
         it('should detect A minor from chord progression', () => {
