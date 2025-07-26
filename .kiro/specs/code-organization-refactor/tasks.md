@@ -1,0 +1,53 @@
+# Implementation Plan
+
+- [x] 1. Herstructureer de parser- en typestructuur
+  - Maak `src/parsers/` directory aan met subfolders: `annotations/`, `core/`, en `__tests__/`
+  - Maak `src/parsers/index.ts` barrel export file aan
+  - Update `src/types/index.ts` voor nieuwe type-bestandsnamen
+  - Verplaats annotation parserbestanden:
+    - `ChordPro.ts` → `annotations/chord-pro.ts`
+    - `OnSong.ts` → `annotations/on-song.ts`
+    - `PlanningCenter.ts` → `annotations/planning-center.ts`
+    - `Songbook.ts` → `annotations/songbook.ts`
+    - `GuitarTabs.ts` → `annotations/guitar-tabs.ts`
+  - Verplaats core parserbestanden:
+    - `BaseParser.ts` → `core/base-parser.ts`
+    - `IParser.ts` → `core/parser.interface.ts`
+    - `section-parser.ts` → `core/section-parser.ts`
+  - Verplaats en hernoem typebestanden:
+    - `chord.types.ts` → `chord.ts`
+    - `section.types.ts` → `section.ts`
+    - `metadata.types.ts` → `metadata.ts`
+    - `chordsheet.types.ts` → `chordsheet.ts`
+    - `format.types.ts` → `format.ts`
+    - `error.types.ts` → `error.ts`
+    - `annotation-parser.ts` → `annotation.ts`
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 3.1, 3.2, 6.2, 6.3_
+
+- [x] 2. Werk imports, tests en exports bij
+  - Update imports in alle parserbestanden naar nieuwe relatieve paden
+  - Pas exports en interface-referenties aan
+  - Verplaats annotation testbestanden:
+    - `ChordProAnnotationParser.test.ts` → `__tests__/annotations/chord-pro.test.ts`
+    - `OnSongAnnotationParser.test.ts` → `__tests__/annotations/on-song.test.ts`
+    - `PCOAnnotationParser.test.ts` → `__tests__/annotations/planning-center.test.ts`
+    - `SongbookAnnotationParser.test.ts` → `__tests__/annotations/songbook.test.ts`
+    - Voeg test toe voor `guitar-tabs` indien nodig
+  - Verplaats core en type testbestanden:
+    - `section-parser.test.ts` → `__tests__/section-parser.test.ts`
+    - Verplaats alle `*.types.test.ts` bestanden naar corresponderende `.test.ts` bestandsnamen
+  - Update alle import statements in testbestanden naar nieuwe locaties
+  - Update klassennamen en referenties in tests
+  - Update alle externe imports in services, utils en componenten
+  - Zorg dat barrel exports in `parsers/index.ts` en `types/index.ts` correct zijn
+  - _Requirements: 2.1, 2.2, 2.3, 2.4, 4.1, 4.2, 4.3, 6.3_
+
+- [x] 3. Opschonen en eindvalidatie
+  - Verwijder lege `src/services/parsers/` mappenstructuur
+  - Verplaats of verwijder alles uit src/services wat niet meer nodig is of een andere plek verdient. ik gebruik nu namelijk src/parsers
+  - Verwijder ongebruikte imports en controleer op broken references
+  - Draai `npm run build` om te valideren dat TypeScript compileert
+  - Draai `npm test` om te bevestigen dat alle tests slagen
+  - Draai `npm run lint` om code stijl te valideren
+  - Controleer functioneel of alles werkt
+  - _Requirements: 4.4, 5.1, 5.2, 5.3, 5.4_
