@@ -10,9 +10,9 @@ describe('Format Types', () => {
       expect(NotationFormat.GUITAR_TABS).toBe('guitar_tabs');
     });
 
-    it('should have exactly 5 notation formats', () => {
+    it('should have exactly 6 notation formats', () => {
       const formatValues = Object.values(NotationFormat);
-      expect(formatValues).toHaveLength(5);
+      expect(formatValues).toHaveLength(6);
     });
 
     it('should contain only string values', () => {
@@ -58,9 +58,9 @@ describe('Format Types', () => {
       expect(AnnotationFormat.PCO).toBe('pco');
     });
 
-    it('should have exactly 3 annotation formats', () => {
+    it('should have exactly 5 annotation formats', () => {
       const annotationValues = Object.values(AnnotationFormat);
-      expect(annotationValues).toHaveLength(3);
+      expect(annotationValues).toHaveLength(5);
     });
 
     it('should contain only string values', () => {

@@ -419,7 +419,7 @@ More content here`;
       
       // Should find the proper section and treat incomplete as content
       expect(results).toHaveLength(2);
-      expect(results[1].section.name).toBe('Proper section');
+      expect(results[1].section.name).toBe('Proper Section');
     });
 
     it('should handle mixed case section headers', () => {

@@ -1,8 +1,13 @@
 import { Section } from '../types';
-import { SectionType, NotationFormat } from '../types/format.types'; 
+import { SectionType, NotationFormat, AnnotationFormat } from '../types/format.types';
 import { ChordParser } from '../utils/chord-parser';
-import { AnnotationParser } from './annotation-parser';
 import { Annotation } from '../types/chord.types';
+import { SongbookAnnotationParser } from './SongbookAnnotationParser';
+import { PCOAnnotationParser } from './PCOAnnotationParser';
+import { ChordProAnnotationParser } from './ChordProAnnotationParser';
+import { OnSongAnnotationParser } from './OnSongAnnotationParser';
+import { GuitarTabsAnnotationParser } from './GuitarTabsAnnotationParser';
+import { BaseParser } from './BaseParser';
 
 /**
  * Result of section parsing with position information
@@ -18,393 +23,260 @@ export interface SectionParseResult {
  * Parser for identifying and parsing sections in chord sheets
  */
 export class SectionParser {
-  /**
-   * Section header patterns for different formats
-   */
-  private static readonly SECTION_PATTERNS = {
-    // Guitar Tabs format: [Intro], [Verse 1], [Chorus]
-    guitarTabs: /^\[([^\]]+)\]$/gm,
-
-    // ChordPro format: {start_of_verse}, {chorus}, etc.
-    chordPro: /^\{(?:start_of_)?([^}]+)(?:_\d+)?\}$/gm,
-
-    // General section headers: Verse:, Chorus:, Bridge:
-    general: /^([A-Za-z][A-Za-z\s]*\d*):?\s*$/gm,
-
-    // Numbered sections: 1., 2., V1, V2, C1, etc.
-    numbered: /^([VCBvbc]?\d+\.?|Verse\s*\d+|Chorus\s*\d+|Bridge\s*\d+):?\s*$/gm
+  // Configuration for chord extraction styles
+  private static chordExtractionStyles: Record<NotationFormat, 'brackets' | 'inline' | 'above'> = {
+    [NotationFormat.GUITAR_TABS]: 'brackets',
+    [NotationFormat.CHORDPRO]: 'brackets',
+    [NotationFormat.PCO]: 'inline',
+    [NotationFormat.ONSONG]: 'inline',
+    [NotationFormat.SONGBOOK]: 'inline',
+    [NotationFormat.NASHVILLE]: 'inline'
   };
 
-  /**
-   * Section type mappings from various text patterns
-   */
-  private static readonly SECTION_TYPE_MAPPINGS: Record<string, SectionType> = {
-    // Verse variations
-    'verse': SectionType.VERSE,
-    'v': SectionType.VERSE,
-    'v1': SectionType.VERSE,
-    'v2': SectionType.VERSE,
-    'v3': SectionType.VERSE,
-    'verse 1': SectionType.VERSE,
-    'verse 2': SectionType.VERSE,
-    'verse 3': SectionType.VERSE,
-    'verse1': SectionType.VERSE,
-    'verse2': SectionType.VERSE,
-    'verse3': SectionType.VERSE,
-
-    // Chorus variations
-    'chorus': SectionType.CHORUS,
-    'c': SectionType.CHORUS,
-    'c1': SectionType.CHORUS,
-    'c2': SectionType.CHORUS,
-    'chorus 1': SectionType.CHORUS,
-    'chorus 2': SectionType.CHORUS,
-    'chorus1': SectionType.CHORUS,
-    'chorus2': SectionType.CHORUS,
-    'refrain': SectionType.CHORUS,
-
-    // Bridge variations
-    'bridge': SectionType.BRIDGE,
-    'b': SectionType.BRIDGE,
-    'b1': SectionType.BRIDGE,
-    'bridge 1': SectionType.BRIDGE,
-    'bridge1': SectionType.BRIDGE,
-    'middle 8': SectionType.BRIDGE,
-    'middle8': SectionType.BRIDGE,
-
-    // Intro variations
-    'intro': SectionType.INTRO,
-    'introduction': SectionType.INTRO,
-    'opening': SectionType.INTRO,
-
-    // Outro variations
-    'outro': SectionType.OUTRO,
-    'ending': SectionType.OUTRO,
-    'coda': SectionType.OUTRO,
-    'end': SectionType.OUTRO,
-
-    // Pre-chorus variations
-    'pre-chorus': SectionType.PRE_CHORUS,
-    'prechorus': SectionType.PRE_CHORUS,
-    'pre chorus': SectionType.PRE_CHORUS,
-    'buildup': SectionType.PRE_CHORUS,
-    'build': SectionType.PRE_CHORUS,
-
-    // Post-chorus variations
-    'post-chorus': SectionType.POST_CHORUS,
-    'postchorus': SectionType.POST_CHORUS,
-    'post chorus': SectionType.POST_CHORUS,
-
-    // Instrumental variations
-    'instrumental': SectionType.INSTRUMENTAL,
-    'solo': SectionType.INSTRUMENTAL,
-    'guitar solo': SectionType.INSTRUMENTAL,
-    'piano solo': SectionType.INSTRUMENTAL,
-    'interlude': SectionType.INTERLUDE,
-
-    // Tag variations
-    'tag': SectionType.TAG,
-    'tag out': SectionType.TAG,
-    'tagout': SectionType.TAG,
-
-    // Vamp variations
-    'vamp': SectionType.VAMP,
-    'vamp out': SectionType.VAMP,
-    'vampout': SectionType.VAMP
+  // Configuration for annotation parsers
+  private static annotationParsers: Partial<Record<NotationFormat, { format: AnnotationFormat; parser: () => BaseParser }>> = {
+    [NotationFormat.SONGBOOK]: { format: AnnotationFormat.SONGBOOK, parser: () => new SongbookAnnotationParser() },
+    [NotationFormat.PCO]: { format: AnnotationFormat.PCO, parser: () => new PCOAnnotationParser() },
+    [NotationFormat.CHORDPRO]: { format: AnnotationFormat.CHORDPRO, parser: () => new ChordProAnnotationParser() },
+    [NotationFormat.ONSONG]: { format: AnnotationFormat.ONSONG, parser: () => new OnSongAnnotationParser() },
+    [NotationFormat.GUITAR_TABS]: { format: AnnotationFormat.GUITAR_TABS, parser: () => new GuitarTabsAnnotationParser() }
   };
 
+  // Regex patterns for section headers
+  private static headerRegexes: Partial<Record<NotationFormat, RegExp>> = {
+    [NotationFormat.GUITAR_TABS]: /^\[([^\]]*)\]$/,
+    [NotationFormat.CHORDPRO]: /^\{(?:start_of_)?(verse|chorus|bridge|intro|outro|instrumental|pre_chorus|post_chorus|tag|vamp|interlude)(?:_(\d+))?\}$/i,
+    [NotationFormat.ONSONG]: /^(V\d+|C\d*|B\d*|Verse\s*\d*|Chorus|Bridge|Intro|Outro|\d+\.|\w+):?\s*$/i,
+    [NotationFormat.SONGBOOK]: /^\(([^\)]+)\)$/,
+  };
+
+  // Regex for ChordPro metadata
+  private static chordProMetadataRegex = /^\{(title|artist|key|tempo|capo|time|duration|copyright|comment|sot|eot)[^}]*\}$/i;
+
+  // Section type mapping
+  private static sectionTypeMap: Array<{ pattern: RegExp | string; type: SectionType }> = [
+    { pattern: /pre[-_\s]?chorus/i, type: SectionType.PRE_CHORUS },
+    { pattern: /post[-_\s]?chorus/i, type: SectionType.POST_CHORUS },
+    { pattern: /chorus|refrain|^c\d*$/i, type: SectionType.CHORUS },
+    { pattern: /bridge|middle 8|^b\d*$/i, type: SectionType.BRIDGE },
+    { pattern: /intro|introduction/i, type: SectionType.INTRO },
+    { pattern: /outro|ending|coda/i, type: SectionType.OUTRO },
+    { pattern: /instrumental|solo/i, type: SectionType.INSTRUMENTAL },
+    { pattern: /tag/i, type: SectionType.TAG },
+    { pattern: /vamp/i, type: SectionType.VAMP },
+    { pattern: /interlude/i, type: SectionType.INTERLUDE },
+    { pattern: /verse|^v\d+|\d+\.?$/i, type: SectionType.VERSE },
+  ];
+
   /**
-   * Parse sections from chord sheet text
-   * @param text - Text to parse for sections
-   * @param format - Format of the chord sheet (affects parsing rules)
-   * @returns Array of parsed sections
+   * Clean content by removing section headers
    */
-  public static parseSections(text: string, format: NotationFormat = NotationFormat.ONSONG): SectionParseResult[] {
-    const sections: SectionParseResult[] = [];
+  private static cleanContent(content: string, format: NotationFormat): string {
+    let cleaned = content;
+    if (format === NotationFormat.GUITAR_TABS) {
+      cleaned = content.replace(/^\[[^\]]+\]\s*$/gm, '');
+    } else if (format === NotationFormat.CHORDPRO) {
+      cleaned = content.replace(/^\{(?:start_of_|end_of_)?(?:verse|chorus|bridge|intro|outro|instrumental|pre_chorus|post_chorus|tag|vamp|interlude)(?:_\d+)?\}\s*$/gmi, '');
+    } else if (format === NotationFormat.ONSONG) {
+      cleaned = content.replace(/^(?:V\d+|C\d*|B\d*|Verse\s*\d*|Chorus|Bridge|Intro|Outro|\d+\.|\w+):?\s*$/gmi, '');
+    } else if (format === NotationFormat.SONGBOOK) {
+      cleaned = content.replace(/^\(([^\)]+)\)\s*\n?/gm, '');
+    }
+    return cleaned;
+  }
+
+  /**
+   * Calculate character index for a line number
+   */
+  private static calculateLineIndex(lines: string[], lineNumber: number): number {
+    return lines.slice(0, Math.min(lineNumber, lines.length))
+      .reduce((index, line) => index + line.length + 1, 0);
+  }
+
+  /**
+   * Parse sections from text based on the provided format
+   */
+  public static parseSections(text: string, format: NotationFormat): SectionParseResult[] {
+    if (!text || !text.trim()) {
+      return [];
+    }
+
     const lines = text.split('\n');
-    let currentSection: Partial<Section> | null = null;
-    let currentSectionLines: string[] = [];
-    let currentStartIndex = 0;
+    const sections: SectionParseResult[] = [];
+    let currentSectionContent: string[] = [];
+    let currentSectionStartIndex = 0;
+    let currentSectionName: string | undefined;
+    let currentSectionType: SectionType | undefined;
+    let sectionStartLine = 0;
+
+    const currentRegex = this.headerRegexes[format];
+
+    // If no regex for format, treat as single section
+    if (!currentRegex) {
+      const content = text.trim();
+      if (content) {
+        sections.push({
+          section: this.createSection({ type: SectionType.VERSE, name: 'Verse' }, content, format),
+          startIndex: 0,
+          endIndex: text.length,
+          originalText: content
+        });
+      }
+      return sections;
+    }
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      const sectionHeader = this.detectSectionHeader(line, format);
+      const trimmedLine = line.trim();
+      
+      // Skip ChordPro metadata
+      if (format === NotationFormat.CHORDPRO && 
+          trimmedLine.match(this.chordProMetadataRegex) &&
+          !trimmedLine.match(/^\{(?:start_of_|end_of_)?(?:verse|chorus|bridge|intro|outro|instrumental|pre_chorus|post_chorus|tag|vamp|interlude)/i)) {
+        continue;
+      }
 
-      if (sectionHeader) {
-        // Save previous section if it exists
-        if (currentSection && currentSectionLines.length > 0) {
-          const sectionContent = currentSectionLines.join('\n').trim();
-          const section = this.createSection(currentSection, sectionContent, format); // Pass format
-          const endIndex = this.calculateLineIndex(lines, i - 1);
+      // Check if this line is a section header
+      const match = trimmedLine.match(currentRegex); // Use the format-specific regex
+      const isHeader = !!match && trimmedLine.length > 0; // A non-empty line that matches the header regex is a header
 
-          sections.push({
-            section,
-            startIndex: currentStartIndex,
-            endIndex,
-            originalText: sectionContent
-          });
+      if (isHeader) {
+        // Save previous section if we have content
+        if (currentSectionContent.length > 0 && currentSectionName) {
+          const originalText = currentSectionContent.join('\n');
+          const content = originalText.trim();
+          if (content) {
+            sections.push({
+              section: this.createSection(
+                { type: currentSectionType || SectionType.VERSE, name: currentSectionName },
+                originalText,
+                format
+              ),
+              startIndex: this.calculateLineIndex(lines, sectionStartLine),
+              endIndex: this.calculateLineIndex(lines, i) - 1,
+              originalText: originalText
+            });
+          }
         }
 
         // Start new section
-        currentSection = {
-          type: sectionHeader.type,
-          name: sectionHeader.name,
-          chords: [],
-          annotations: []
-        };
-        currentSectionLines = [];
-        currentStartIndex = this.calculateLineIndex(lines, i);
-      } else if (currentSection) {
-        // Add line to current section
-        currentSectionLines.push(line);
-      } else {
-        // No section header found yet, treat as default section
-        if (!currentSection) {
-          currentSection = {
-            type: SectionType.VERSE,
-            name: 'Verse',
-            chords: [],
-            annotations: []
-          };
-          currentStartIndex = 0;
+        currentSectionContent = [line]; // Include the header line
+        sectionStartLine = i;
+        currentSectionStartIndex = this.calculateLineIndex(lines, i);
+
+        // Extract section name and type
+        if (format === NotationFormat.CHORDPRO) {
+          const sectionName = match![1];
+          const sectionNumber = match![2];
+          currentSectionName = `${sectionName.charAt(0).toUpperCase() + sectionName.slice(1)}${sectionNumber ? ` ${sectionNumber}` : ''}`;
+          currentSectionType = sectionName.toLowerCase() as SectionType;
+        } else {
+          const rawName = match![1].trim();
+          const { type, name } = this.inferSectionTypeAndName(rawName);
+          currentSectionType = type;
+          currentSectionName = name;
         }
-        currentSectionLines.push(line);
+      } else {
+        // Add content line to current section
+        if (currentSectionName) {
+          currentSectionContent.push(line);
+        } else if (line.trim()) { // Only add if it's not an empty line
+          // No section header found yet, start default section with content
+          currentSectionContent.push(line);
+          if (!currentSectionName) { // Initialize default section if not already
+            currentSectionName = 'Verse';
+            currentSectionType = SectionType.VERSE;
+            sectionStartLine = 0;
+          }
+        }
       }
     }
 
-    // Handle the last section
-    if (currentSection && currentSectionLines.length > 0) {
-      const sectionContent = currentSectionLines.join('\n').trim();
-      const section = this.createSection(currentSection, sectionContent, format); // Pass format
-      const endIndex = text.length;
-
-      sections.push({
-        section,
-        startIndex: currentStartIndex,
-        endIndex,
-        originalText: sectionContent
-      });
+    // Add the last section
+    if (currentSectionContent.length > 0 && currentSectionName) {
+      const originalText = currentSectionContent.join('\n');
+      const content = originalText.trim();
+      if (content) {
+        sections.push({
+          section: this.createSection(
+            { type: currentSectionType || SectionType.VERSE, name: currentSectionName },
+            originalText,
+            format
+          ),
+          startIndex: this.calculateLineIndex(lines, sectionStartLine),
+          endIndex: text.length,
+          originalText: originalText
+        });
+      }
     }
 
-    return sections.filter(s => s.section.content.trim().length > 0);
+    // Fallback: if no sections found and we have content, try implicit parsing
+    if (sections.length === 0 && text.trim()) {
+      return this.identifyImplicitSections(text);
+    }
+
+    return sections;
   }
 
   /**
-   * Detect section header from a line of text
-   * @param line - Line to analyze
-   * @param format - Format context for parsing
-   * @returns Section header information or null
+   * Format sections with proper spacing
    */
-  private static detectSectionHeader(line: string, format: NotationFormat): { type: SectionType; name: string } | null {
-    const trimmedLine = line.trim();
-
-    if (!trimmedLine) return null;
-
-    // Try different patterns based on format
-    switch (format) {
-      case NotationFormat.GUITAR_TABS:
-        return this.parseGuitarTabsHeader(trimmedLine);
-
-      case NotationFormat.CHORDPRO:
-        return this.parseChordProHeader(trimmedLine);
-
-      default:
-        // For ONSONG and other general formats, try general and numbered patterns
-        return this.parseGeneralHeader(trimmedLine);
-    }
+  public static formatSectionsWithSpacing(sections: Section[], hasAnnotations: boolean = false): string {
+    const formattedSections = sections.map(section => {
+      const sectionHeader = this.formatSectionHeader(section.name, NotationFormat.GUITAR_TABS);
+      return `${sectionHeader}\n${section.content}`;
+    });
+    return formattedSections.join(hasAnnotations ? '\n\n\n' : '\n\n');
   }
 
   /**
-   * Parse Guitar Tabs format section header [Section Name]
+   * Format section header based on target format
    */
-  private static parseGuitarTabsHeader(line: string): { type: SectionType; name: string } | null {
-    const match = line.match(/^\[([^\]]+)\]$/);
-    if (!match) return null;
-
-    const sectionName = match[1].trim();
-    const type = this.mapSectionType(sectionName);
-
-    return {
-      type,
-      name: this.formatSectionName(sectionName, type)
+  public static formatSectionHeader(sectionName: string, targetFormat: NotationFormat): string {
+    const formatters: Record<NotationFormat, (name: string) => string> = {
+      [NotationFormat.GUITAR_TABS]: name => name.replace(/^\[|\]$/g, '') + ':',
+      [NotationFormat.CHORDPRO]: name => {
+        const chordProName = name.toLowerCase().replace(/\s+/g, '_');
+        const match = chordProName.match(/^(verse|chorus|bridge)_?(\d+)?$/);
+        if (match) {
+          const base = match[1];
+          const num = match[2] || '';
+          return `{start_of_${base}${num ? `_${num}` : ''}}`;
+        }
+        return `{${chordProName}}`;
+      },
+      [NotationFormat.ONSONG]: name => name + ':',
+      [NotationFormat.SONGBOOK]: name => `(${name})`,
+      [NotationFormat.NASHVILLE]: name => name + ':',
+      [NotationFormat.PCO]: name => `<b>${name}</b>`
     };
+    return (formatters[targetFormat] || formatters[NotationFormat.ONSONG])(sectionName);
   }
 
   /**
-   * Parse ChordPro format section header {start_of_verse}, {chorus}, etc.
+   * Convert Guitar Tabs section headers to standard format
    */
-  private static parseChordProHeader(line: string): { type: SectionType; name: string } | null {
-    const match = line.match(/^\{(?:start_of_)?([^}]+?)(?:_(\d+))?\}$/);
-    if (!match) return null;
-
-    const sectionName = match[1].replace(/_/g, ' ').trim();
-    const sectionNumber = match[2];
-    const type = this.mapSectionType(sectionName);
-
-    let name = this.formatSectionName(sectionName, type);
-    if (sectionNumber) {
-      name += ` ${sectionNumber}`;
-    }
-
-    return { type, name };
+  public static convertGuitarTabsHeaders(text: string): string {
+    return text.replace(/^\[([^\]]+)\]$/gm, (match, sectionName) => sectionName.trim() + ':');
   }
-
-  /**
-   * Parse general section headers like "Verse:", "Chorus 1", etc.
-   */
-  private static parseGeneralHeader(line: string): { type: SectionType; name: string } | null {
-    const trimmed = line.trim().toLowerCase();
-
-    const matches: { regex: RegExp; extractName: (m: RegExpMatchArray) => string }[] = [
-      { regex: /^([a-z][a-z\s]*\d*):$/, extractName: m => m[1].trim() },         // Verse 1:, Chorus:
-      { regex: /^([vcb]\d*):?$/, extractName: m => m[1].trim() }, // V1:, C:, B: (colon optional, includes number if present)
-      { regex: /^(\d+)\.$/, extractName: m => m[1].trim() }       // 1.
-    ];
-
-    for (const { regex, extractName } of matches) {
-      const m = trimmed.match(regex);
-      if (m) {
-        const rawName = extractName(m);
-        const type = this.mapSectionType(rawName);
-        const name = this.formatSectionName(rawName, type); // formatSectionName will handle the display name
-        return { type, name };
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Map section name to SectionType enum
-   */
-  private static mapSectionType(sectionName: string): SectionType {
-    const normalized = sectionName.toLowerCase().trim();
-  
-    // 1. Direct mapping (most specific and highest priority)
-    const directMappedType = this.SECTION_TYPE_MAPPINGS[normalized];
-    if (directMappedType) {
-      return directMappedType;
-    }
-  
-    // 2. Pattern matching for common types (if not directly mapped)
-    // Handle specific cases first - these patterns must be exact matches
-    if (/^intro(duction)?$/.test(normalized) || /^opening$/.test(normalized)) {
-      return SectionType.INTRO;
-    }
-    if (/^outro$/.test(normalized) || /^ending$/.test(normalized) || /^coda$/.test(normalized) || /^end$/.test(normalized)) {
-      return SectionType.OUTRO;
-    }
-    if (/^pre-?chorus$/.test(normalized) || /^buildup$/.test(normalized) || /^build$/.test(normalized)) {
-      return SectionType.PRE_CHORUS;
-    }
-    if (/^post-?chorus$/.test(normalized)) {
-      return SectionType.POST_CHORUS;
-    }
-    if (/^instrumental$/.test(normalized) || /^solo$/.test(normalized) || /^guitar solo$/.test(normalized) || /^piano solo$/.test(normalized)) {
-      return SectionType.INSTRUMENTAL;
-    }
-    if (/^tag$/.test(normalized) || /^tag out$/.test(normalized)) {
-      return SectionType.TAG;
-    }
-    if (/^vamp$/.test(normalized) || /^vamp out$/.test(normalized)) {
-      return SectionType.VAMP;
-    }
-    if (/^interlude$/.test(normalized)) {
-      return SectionType.INTERLUDE;
-    }
-    
-    // Handle chorus patterns - more specific patterns first
-    // Added explicit check for single 'c'
-    if (/^chorus(\s+\d+)?$/.test(normalized) || /^chorus\d+$/.test(normalized) ||
-        /^c(\s*\d*)$/.test(normalized) ||  // Handles 'c', 'c1', 'c2'
-        /^refrain$/.test(normalized)) {
-      return SectionType.CHORUS;
-    }
-    
-    // Handle bridge patterns - more specific patterns first
-    // Added explicit check for single 'b'
-    if (/^bridge(\s+\d+)?$/.test(normalized) || /^bridge\d+$/.test(normalized) ||
-        /^b(\s*\d*)$/.test(normalized) ||  // Handles 'b', 'b1', 'b2'
-        /^middle\s*8$/.test(normalized)) {
-      return SectionType.BRIDGE;
-    }
-    
-    // Handle verse patterns - more specific patterns first
-    if (/^verse(\s+\d+)?$/.test(normalized) || /^verse\d+$/.test(normalized) ||
-        /^v(\s*\d*)$/.test(normalized) ||  // Handles 'v', 'v1', 'v2'
-        /^\d+$/.test(normalized)) {
-      return SectionType.VERSE;
-    }
-  
-    // Default to verse for unknown sections
-    return SectionType.VERSE;
-  }
-
-  /**
-   * Format section name for display
-   */
-  private static formatSectionName(sectionName: string, type: SectionType): string {
-    const normalized = sectionName.toLowerCase().trim();
-
-    // Handle numbered abbreviations (e.g., "v1" -> "Verse 1")
-    const matchV = normalized.match(/^v(\d+)$/);
-    if (matchV) return `Verse ${matchV[1]}`;
-    const matchC = normalized.match(/^c(\d+)$/);
-    if (matchC) return `Chorus ${matchC[1]}`;
-    const matchB = normalized.match(/^b(\d+)$/);
-    if (matchB) return `Bridge ${matchB[1]}`;
-
-    // Handle single letter abbreviations based on test expectations
-    if (normalized === 'v') return 'Verse 1'; // V: -> Verse 1
-    if (normalized === 'c') return 'Chorus';  // C: -> Chorus (no '1')
-    if (normalized === 'b') return 'Bridge 1'; // B: -> Bridge 1
-
-    // Handle numbered sections (e.g., "1" -> "Verse 1")
-    if (/^\d+$/.test(normalized)) {
-      return `${type.charAt(0).toUpperCase() + type.slice(1)} ${normalized}`;
-    }
-
-    // Capitalize first letter of known types if the input was just the type name
-    // e.g., "intro" -> "Intro"
-    if (Object.values(SectionType).includes(normalized as SectionType)) {
-      return normalized.charAt(0).toUpperCase() + normalized.slice(1);
-    }
-
-    // Default: Capitalize first letter of the original section name
-    return sectionName.charAt(0).toUpperCase() + sectionName.slice(1).toLowerCase();
-  }
-
 
   /**
    * Create a complete Section object from parsed data
    */
   private static createSection(sectionData: Partial<Section>, content: string, format: NotationFormat): Section {
-    let chordExtractionStyle: 'brackets' | 'inline' | 'above';
+    // Remove section headers from content to avoid false chord parsing
+    const cleanedContent = this.cleanContent(content, format);
 
-    // Determine chord extraction style based on the notation format
-    switch (format) {
-      case NotationFormat.GUITAR_TABS:
-      case NotationFormat.CHORDPRO:
-        chordExtractionStyle = 'brackets'; // Chords are typically in brackets or implied inline
-        break;
-      case NotationFormat.ONSONG:
-        // OnSong often has chords above lyrics, but if ChordParser.extractChordsFromText
-        // doesn't support 'above' on a multi-line string, 'inline' is a safer fallback than 'brackets'.
-        // A more robust solution for 'above' would involve parsing line by line in parseSections.
-        chordExtractionStyle = 'inline';
-        break;
-      default:
-        chordExtractionStyle = 'inline'; // Default for other formats
-    }
-
-    // Parse chords from content using the determined style
-    // Added a defensive filter to remove any chords with 'Invalid' root,
-    // which indicates an issue in ChordParser itself.
-    const chords = ChordParser.extractChordsFromText(content, chordExtractionStyle)
+    // Parse chords
+    const chordExtractionStyle = this.chordExtractionStyles[format] === 'above' ? 'inline' : this.chordExtractionStyles[format] || 'inline';
+    const chords = ChordParser.extractChordsFromText(cleanedContent, chordExtractionStyle)
       .filter(chord => chord.root !== 'Invalid');
 
-    // Parse annotations from content
-    const annotationResults = AnnotationParser.parseAnnotations(content);
-    const annotations = annotationResults.map(result => result.annotation);
+    // Parse annotations
+    const annotationConfig = this.annotationParsers[format];
+    const annotations = annotationConfig
+      ? annotationConfig.parser().parseOfFormat(content, annotationConfig.format)
+      : [];
 
     return {
       type: sectionData.type || SectionType.VERSE,
@@ -416,187 +288,150 @@ export class SectionParser {
   }
 
   /**
-   * Calculate character index for a line number
+   * Infer section type and name from header - with special handling for counters
    */
-  private static calculateLineIndex(lines: string[], lineNumber: number): number {
-    let index = 0;
-    for (let i = 0; i < lineNumber && i < lines.length; i++) {
-      index += lines[i].length + 1; // +1 for newline character
-    }
-    return index;
-  }
+  private static inferSectionTypeAndName(header: string): { type: SectionType; name: string } {
+    const normalizedName = header.replace(/:$/, '').toLowerCase().trim();
+    let sectionType = SectionType.VERSE;
+    let sectionName = header.replace(/:$/, '').trim();
 
-  /**
-   * Format sections with proper spacing according to requirements
-   * @param sections - Array of sections
-   * @param hasAnnotations - Whether sections have annotations
-   * @returns Formatted text with proper spacing
-   */
-  public static formatSectionsWithSpacing(sections: Section[], hasAnnotations: boolean = false): string {
-    const formattedSections: string[] = [];
-
-    for (let i = 0; i < sections.length; i++) {
-      const section = sections[i];
-      let sectionText = '';
-
-      // Add section header (for Guitar Tabs format, convert brackets to colons)
-      // Note: This method currently hardcodes GUITAR_TABS formatting for headers.
-      // If dynamic target format is needed, an additional parameter should be added.
-      const sectionHeader = this.formatSectionHeader(section.name, NotationFormat.GUITAR_TABS);
-      sectionText += sectionHeader + '\n';
-
-      // Add section content
-      sectionText += section.content;
-
-      formattedSections.push(sectionText);
+    // Handle numbered sections (1., 2., etc.)
+    const numberedMatch = normalizedName.match(/^(\d+)\.?$/);
+    if (numberedMatch) {
+      const num = numberedMatch[1];
+      return { type: SectionType.VERSE, name: `Verse ${num}` };
     }
 
-    // Join sections with proper spacing
-    const spacing = hasAnnotations ? '\n\n\n' : '\n\n';
-    return formattedSections.join(spacing);
-  }
+    // Handle abbreviated forms with counters
+    const abbreviatedMatch = normalizedName.match(/^([a-z])(\d*)$/);
+    if (abbreviatedMatch) {
+      const abbrev = abbreviatedMatch[1];
+      const num = abbreviatedMatch[2];
+      
+      switch (abbrev) {
+        case 'v':
+          return { type: SectionType.VERSE, name: `Verse ${num || (num === '' ? '1' : '')}` };
+        case 'c':
+          return { type: SectionType.CHORUS, name: num ? `Chorus ${num}` : 'Chorus' };
+        case 'b':
+          return { type: SectionType.BRIDGE, name: num ? `Bridge ${num}` : (num === '' ? 'Bridge 1' : 'Bridge') };
+        default:
+          return { type: SectionType.VERSE, name: sectionName };
+      }
+    }
 
-  /**
-   * Format section header based on target format
-   * @param sectionName - Name of the section
-   * @param targetFormat - Target notation format
-   * @returns Formatted section header
-   */
-  public static formatSectionHeader(sectionName: string, targetFormat: NotationFormat): string {
-    switch (targetFormat) {
-      case NotationFormat.GUITAR_TABS:
-        // Remove brackets and add colons: [Intro] becomes Intro:
-        return sectionName.replace(/^\[|\]$/g, '') + ':';
-
-      case NotationFormat.CHORDPRO:
-        // Convert to ChordPro format: {start_of_verse}
-        const chordProName = sectionName.toLowerCase().replace(/\s+/g, '_');
-        // Special handling for common ChordPro section names
-        if (chordProName.startsWith('verse')) {
-          const verseNum = chordProName.replace('verse_', '');
-          return `{start_of_verse${verseNum ? `_${verseNum}` : ''}}`;
-        } else if (chordProName.startsWith('chorus')) {
-          const chorusNum = chordProName.replace('chorus_', '');
-          return `{chorus${chorusNum ? `_${chorusNum}` : ''}}`;
-        } else if (chordProName.startsWith('bridge')) {
-          const bridgeNum = chordProName.replace('bridge_', '');
-          return `{bridge${bridgeNum ? `_${bridgeNum}` : ''}}`;
+    // Handle full word sections
+    const mapping = this.sectionTypeMap.find(({ pattern }) => 
+      typeof pattern === 'string' ? normalizedName.includes(pattern) : pattern.test(normalizedName)
+    ); // Use test() for regex patterns
+    
+    if (mapping) {
+      sectionType = mapping.type;
+      
+      // Special handling for specific section types
+      if (sectionType === SectionType.VERSE) {
+        const verseMatch = normalizedName.match(/verse\s*(\d+)?/);
+        if (verseMatch) {
+          const num = verseMatch[1];
+          sectionName = `Verse ${num || '1'}`;
+        } else if (normalizedName === 'verse') {
+          sectionName = 'Verse 1';
         }
-        return `{${chordProName}}`; // Fallback for other section types
-
-      default:
-        // Default format with colon
-        return sectionName + ':';
-    }
-  }
-
-  /**
-   * Convert Guitar Tabs section headers to standard format
-   * @param text - Text with Guitar Tabs section headers
-   * @returns Text with converted section headers
-   */
-  public static convertGuitarTabsHeaders(text: string): string {
-    return text.replace(/^\[([^\]]+)\]$/gm, (match, sectionName) => {
-      return sectionName.trim() + ':';
-    });
-  }
-
-  /**
-   * Identify sections without explicit headers based on content patterns
-   * @param text - Text to analyze
-   * @returns Array of identified sections
-   */
-  public static identifyImplicitSections(text: string): SectionParseResult[] {
-    const lines = text.split('\n');
-    const sections: SectionParseResult[] = [];
-    let currentLines: string[] = [];
-    let sectionCount = 1;
-    let startIndex = 0;
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-
-      // Empty line might indicate section break
-      if (!line) {
-        if (currentLines.length > 0) {
-          // Check if we have enough content for a section
-          const content = currentLines.join('\n').trim();
-          if (content.length > 0) {
-            // For implicit sections, we assume ONSONG format for chord parsing
-            const section = this.createSection({
-              type: SectionType.VERSE,
-              name: `Verse ${sectionCount}`,
-              chords: [],
-              annotations: []
-            }, content, NotationFormat.ONSONG); // Implicit sections default to ONSONG for chord parsing
-
-            sections.push({
-              section,
-              startIndex,
-              endIndex: this.calculateLineIndex(lines, i),
-              originalText: content
-            });
-
-            sectionCount++;
-          }
-          currentLines = [];
-          startIndex = this.calculateLineIndex(lines, i + 1);
+      } else if (sectionType === SectionType.CHORUS) {
+        const chorusMatch = normalizedName.match(/chorus\s*(\d+)?/);
+        if (chorusMatch) {
+          const num = chorusMatch[1];
+          sectionName = num ? `Chorus ${num}` : 'Chorus';
+        } else if (normalizedName === 'chorus') {
+          sectionName = 'Chorus';
+        }
+      } else if (sectionType === SectionType.BRIDGE) {
+        const bridgeMatch = normalizedName.match(/bridge\s*(\d+)?/);
+        if (bridgeMatch) {
+          const num = bridgeMatch[1];
+          sectionName = num ? `Bridge ${num}` : 'Bridge';
         }
       } else {
-        currentLines.push(lines[i]);
+        // Capitalize first letter for other section types
+        sectionName = header.charAt(0).toUpperCase() + header.slice(1);
       }
+    } else {
+      // Default fallback
+      sectionName = header.charAt(0).toUpperCase() + header.slice(1);
     }
 
-    // Handle last section
-    if (currentLines.length > 0) {
-      const content = currentLines.join('\n').trim();
-      if (content.length > 0) {
-        // For implicit sections, we assume ONSONG format for chord parsing
-        const section = this.createSection({
-          type: SectionType.VERSE,
-          name: `Verse ${sectionCount}`,
-          chords: [],
-          annotations: []
-        }, content, NotationFormat.ONSONG); // Implicit sections default to ONSONG for chord parsing
+    return { type: sectionType, name: sectionName };
+  }
 
+  /**
+   * Identify implicit sections based on blank lines
+   */
+  public static identifyImplicitSections(text: string): SectionParseResult[] {
+    const sections: SectionParseResult[] = [];
+    const paragraphs = text.split(/\n\s*\n/);
+    let currentIndex = 0;
+    
+    for (let i = 0; i < paragraphs.length; i++) {
+      const paragraph = paragraphs[i].trim();
+      if (paragraph) {
+        const sectionName = `Verse ${i + 1}`;
+        const endIndex = currentIndex + paragraph.length;
+        
         sections.push({
-          section,
-          startIndex,
-          endIndex: text.length,
-          originalText: content
+          section: this.createSection(
+            { type: SectionType.VERSE, name: sectionName },
+            paragraph,
+            NotationFormat.ONSONG
+          ),
+          startIndex: currentIndex,
+          endIndex: endIndex,
+          originalText: paragraph
         });
+        
+        // Update currentIndex to account for the paragraph and separator
+        currentIndex = text.indexOf(paragraph, currentIndex) + paragraph.length;
+        if (i < paragraphs.length - 1) {
+          // Find the next paragraph to calculate proper spacing
+          const nextParagraph = paragraphs[i + 1].trim();
+          if (nextParagraph) {
+            currentIndex = text.indexOf(nextParagraph, currentIndex);
+          }
+        }
       }
+    }
+    
+    // If no blank lines found, treat entire text as single section
+    if (sections.length === 0 && text.trim()) {
+      sections.push({
+        section: this.createSection(
+          { type: SectionType.VERSE, name: 'Verse 1' },
+          text.trim(),
+          NotationFormat.ONSONG
+        ),
+        startIndex: 0,
+        endIndex: text.length,
+        originalText: text.trim()
+      });
     }
 
     return sections;
   }
 
   /**
-   * Merge sections with their annotations for proper formatting
-   * @param sections - Array of sections
-   * @param annotations - Array of annotations
-   * @returns Sections with annotations properly associated
+   * Merge sections with their annotations
    */
   public static mergeSectionsWithAnnotations(
     sections: SectionParseResult[],
     annotations: { annotation: Annotation; startIndex: number; endIndex: number }[]
   ): SectionParseResult[] {
-    return sections.map(sectionResult => {
-      // Find annotations that belong to this section
-      const sectionAnnotations = annotations.filter(ann =>
-        ann.startIndex >= sectionResult.startIndex &&
-        ann.endIndex <= sectionResult.endIndex
-      );
-
-      const updatedSection: Section = {
+    return sections.map(sectionResult => ({
+      ...sectionResult,
+      section: {
         ...sectionResult.section,
-        annotations: sectionAnnotations.map(ann => ann.annotation)
-      };
-
-      return {
-        ...sectionResult,
-        section: updatedSection
-      };
-    });
+        annotations: annotations
+          .filter(ann => ann.startIndex >= sectionResult.startIndex && ann.endIndex <= sectionResult.endIndex)
+          .map(ann => ann.annotation)
+      }
+    }));
   }
 }

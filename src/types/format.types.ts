@@ -6,7 +6,8 @@ export enum NotationFormat {
   ONSONG = 'onsong',
   SONGBOOK = 'songbook',
   CHORDPRO = 'chordpro',
-  GUITAR_TABS = 'guitar_tabs'
+  GUITAR_TABS = 'guitar_tabs',
+  PCO = "PCO"
 }
 
 /**
@@ -32,5 +33,7 @@ export enum SectionType {
 export enum AnnotationFormat {
   ONSONG = 'onsong',        // *Comment
   SONGBOOK = 'songbook',    // (Comment)
-  PCO = 'pco'               // <b>Comment</b>
+  PCO = 'pco',              // <b>Comment</b>
+  CHORDPRO = 'chordpro',     // {comment: ...} or {c: ...}
+  GUITAR_TABS = 'guitar_tabs' // *Comment
 }
