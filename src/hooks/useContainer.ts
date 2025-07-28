@@ -22,13 +22,10 @@ const ContainerContext = createContext<DependencyContainer | null>(null);
  * 3. Delete node_modules and package-lock.json/yarn.lock, then run npm install/yarn install again.
  * 4. Perform a clean build of your project.
  */
-export const ContainerProvider = ({
-  children,
-  container
-}: {
+export const ContainerProvider: React.FC<{
   children: React.ReactNode;
   container?: DependencyContainer;
-}) => {
+}> = ({ children, container }) => {
   const defaultContainer = container || createConfiguredContainer({
     storageType: 'memory',
     errorRecoveryLevel: 'permissive'
