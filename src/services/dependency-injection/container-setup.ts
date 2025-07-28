@@ -37,7 +37,8 @@ import { KeyTransposer } from '../conversion-engine/transposition/key-transposer
 import { TransposeCommandManager } from '../conversion-engine/transposition/transpose-command-manager';
 import { NashvilleBuilder } from '../conversion-engine/nashville/nashville-builder';
 import { NashvilleNotationDirector } from '../conversion-engine/nashville/nashville-notation-director';
-import { FileSystemStorageAdapter, InMemoryStorageAdapter } from '../storage/storage-adapter';
+import { InMemoryStorageAdapter } from '../storage/storage-adapter';
+import { ClientStorageAdapter } from '../storage/client-storage-adapter';
 import { StorageService } from '../storage/storage-service';
 
 // Define a specific interface for ConversionError events
@@ -70,7 +71,8 @@ export function setupDependencyContainer(
         return new InMemoryStorageAdapter();
       case 'filesystem':
       default:
-        return new FileSystemStorageAdapter(storagePath);
+        // Use client-safe adapter that communicates via API routes
+        return new ClientStorageAdapter();
     }
   });
 
@@ -163,7 +165,7 @@ export function setupDependencyContainer(
 /**
  * Create and configure a new dependency container
  */
-export const createContainer = (): DependencyContainer => {
+export const createContainer = (options = {}): DependencyContainer => {
   const container = new DependencyContainer();
   setupDependencyContainer(container, options);
   return container;

@@ -5,15 +5,8 @@
  */
 
 import { IStorageAdapter } from '../../types/interfaces/core-interfaces';
-
-// Only import Node.js modules on server-side
-let fs: typeof import('fs/promises');
-let path: typeof import('path');
-
-if (typeof window === 'undefined') {
-  fs = require('fs/promises');
-  path = require('path');
-}
+import * as fs from 'fs/promises';
+import * as path from 'path';
 
 /**
  * File system storage adapter
@@ -294,6 +287,6 @@ export class InMemoryStorageAdapter implements IStorageAdapter {
   }
 }
 
-// Singleton instance for use in API routes
-export const fileSystemStorage = new FileSystemStorageAdapter();
-export const inMemoryStorage = new InMemoryStorageAdapter();
+// Note: Do not export singleton instances from this module
+// as they will be bundled for client-side if imported by client code.
+// Instead, instantiate these adapters within API routes or server-only modules.

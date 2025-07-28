@@ -1,6 +1,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { fileSystemStorage } from '../../../services/storage/storage-adapter';
+import { FileSystemStorageAdapter } from '../../../services/storage/storage-adapter';
+
+// Create server-side storage adapter instance
+const fileSystemStorage = new FileSystemStorageAdapter();
 
 export async function GET(request: NextRequest) {
   try {

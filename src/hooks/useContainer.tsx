@@ -3,7 +3,7 @@
 
 import { useContext, createContext } from 'react';
 import { DependencyContainer } from '../services/dependency-injection/dependency-container';
-import { createConfiguredContainer } from '../services/dependency-injection/container-setup';
+import { createContainer } from '../services/dependency-injection/container-setup';
 
 // Create the context for the DependencyContainer.
 // It can hold a DependencyContainer instance or be null initially.
@@ -26,8 +26,8 @@ export const ContainerProvider: React.FC<{
   children: React.ReactNode;
   container?: DependencyContainer;
 }> = ({ children, container }) => {
-  const defaultContainer = container || createConfiguredContainer({
-    storageType: 'memory',
+  const defaultContainer = container || createContainer({
+    storageType: 'filesystem',
     errorRecoveryLevel: 'permissive'
   });
 
