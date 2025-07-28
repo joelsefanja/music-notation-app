@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { NotationFormat } from '../types';
-import { ConversionEngine } from '../services/conversion-engine';
+import { ConversionEngine } from '../services/conversion-engine-old/conversion-engine';
 import { FormatDetectionResult } from '../services/format-detector';
-import { KeyDetectionResult } from '../services/auto-key-detection';
+import { KeyDetectionResult } from '../services/key-detector';
 import { useDebounce } from '../hooks/useDebounce';
 
 // Components

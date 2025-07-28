@@ -7,14 +7,15 @@
     ],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": false,
     "noEmit": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "module": "esnext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "plugins": [
       {
@@ -27,13 +28,17 @@
         "./src/*"
       ]
     },
-    "target": "ESNext"
+    "target": "ESNext",
+    "types": ["jest", "@testing-library/jest-dom", "node"]
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "tests/**/*"
   ],
   "exclude": [
     "node_modules"

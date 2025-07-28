@@ -1,23 +1,48 @@
-const nextJest = require('next/jest')
+/**
+ * Jest configuration for SOLID refactored conversion engine with React Testing Library
+ */
 
-const createJestConfig = nextJest({
-  // Provide the path to your Next.js app to load next.config.js and .env files
-  dir: './',
-})
-
-// Add any custom config to be passed to Jest
-const customJestConfig = {
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'jsdom', // Changed to jsdom for React components
+  roots: ['<rootDir>/src', '<rootDir>/tests'], // Added tests directory
+  testMatch: [
+    '**/__tests__/**/*.+(ts|tsx|js)',
+    '**/*.(test|spec).+(ts|tsx|js)',
+    '**/tests/**/*.+(ts|tsx|js)' // Added tests directory pattern
+  ],
+  setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'], // Added setup file
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/tests/**/*',
+    '!src/examples/**/*',
+    '!src/**/*.test.{ts,tsx}',
+    '!src/**/*.spec.{ts,tsx}',
+    '!src/setupTests.ts'
+  ],
   moduleNameMapper: {
-    // Handle module aliases (this will be automatically configured for you based on your tsconfig.json paths)
     '^@/(.*)$': '<rootDir>/src/$1',
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy' // Mock CSS imports
   },
-  testEnvironment: 'jest-environment-jsdom',
-  // Run tests in parallel
-  maxWorkers: 6,
-  // Enable Jest's cache
-  cache: true,
-}
-
-// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
-module.exports = createJestConfig(customJestConfig)
+  transform: {
+    '^.+\\.(ts|tsx)$': 'ts-jest',
+    '^.+\\.(js|jsx)$': 'babel-jest'
+  },
+  transformIgnorePatterns: [
+    'node_modules/(?!(.*\\.mjs$))'
+  ],
+  verbose: true,
+  clearMocks: true,
+  restoreMocks: true,
+  testTimeout: 10000, // Increased timeout for component tests
+  // React Testing Library specific settings
+  globals: {
+    'ts-jest': {
+      tsconfig: {
+        jsx: 'react-jsx'
+      }
+    }
+  }
+};

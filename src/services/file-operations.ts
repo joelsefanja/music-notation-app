@@ -1,6 +1,6 @@
 import { NotationFormat } from '../types';
 import { FormatDetector } from './format-detector';
-import { AutoKeyDetection } from './auto-key-detection';
+import { AutoKeyDetection } from './key-detector';
 import { FileMetadata, FileSource } from './storage/storage-provider.interface';
 
 export interface ImportResult {

@@ -1,18 +1,20 @@
 /**
- * Enumeration of conversion error types
+ * Enumeration of specific error types for better classification and recovery.
  */
 export enum ConversionErrorType {
   PARSE_ERROR = 'PARSE_ERROR',
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
+  CONVERSION_ERROR = 'CONVERSION_ERROR',
+  FILE_ERROR = 'FILE_ERROR',
+  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
   FORMAT_ERROR = 'FORMAT_ERROR',
   KEY_ERROR = 'KEY_ERROR',
-  FILE_ERROR = 'FILE_ERROR',
-  NETWORK_ERROR = 'NETWORK_ERROR',
-  VALIDATION_ERROR = 'VALIDATION_ERROR',
-  CONVERSION_ERROR = 'CONVERSION_ERROR'
+  RENDER_ERROR = 'RENDER_ERROR',
+  TRANSPOSE_ERROR = 'TRANSPOSE_ERROR'
 }
 
 /**
- * Detailed conversion error interface
+ * Interface for a detailed conversion error with enhanced information
  */
 export interface ConversionError {
   type: ConversionErrorType;
@@ -21,120 +23,63 @@ export interface ConversionError {
   column?: number;
   suggestion?: string;
   recoverable: boolean;
+  originalInput?: string;
   context?: string;
-  originalError?: Error;
 }
 
 /**
- * Error recovery strategy interface
- */
-export interface RecoveryStrategy {
-  canRecover(error: ConversionError): boolean;
-  recover(error: ConversionError, input: string): string;
-  getRecoveryMessage(error: ConversionError): string;
-}
-
-/**
- * Result type for operations that may have errors
- */
-export interface OperationResult<T> {
-  success: boolean;
-  data?: T;
-  errors: ConversionError[];
-  warnings: string[];
-}
-
-/**
- * Factory for creating conversion errors
+ * Factory for creating ConversionError instances.
  */
 export class ConversionErrorFactory {
-  static createParseError(
-    message: string, 
-    line?: number, 
-    column?: number, 
-    suggestion?: string
-  ): ConversionError {
+  static createParseError(message: string, lineNumber?: number, columnNumber?: number, suggestion?: string, originalInput?: string): ConversionError {
     return {
       type: ConversionErrorType.PARSE_ERROR,
       message,
-      line,
-      column,
-      suggestion: suggestion || 'Check the syntax of your chord sheet',
+      line: lineNumber,
+      column: columnNumber,
+      suggestion,
       recoverable: true,
-      context: line ? `Line ${line}${column ? `, Column ${column}` : ''}` : undefined
+      originalInput,
+      context: originalInput
     };
   }
 
-  static createFormatError(
-    message: string, 
-    detectedFormat?: string, 
-    expectedFormat?: string
-  ): ConversionError {
-    return {
-      type: ConversionErrorType.FORMAT_ERROR,
-      message,
-      suggestion: expectedFormat 
-        ? `Try converting to ${expectedFormat} format first`
-        : 'Verify the input format is supported',
-      recoverable: true,
-      context: detectedFormat ? `Detected format: ${detectedFormat}` : undefined
-    };
-  }
-
-  static createKeyError(
-    message: string, 
-    sourceKey?: string, 
-    targetKey?: string
-  ): ConversionError {
-    return {
-      type: ConversionErrorType.KEY_ERROR,
-      message,
-      suggestion: 'Check that both source and target keys are valid musical keys',
-      recoverable: true,
-      context: sourceKey && targetKey 
-        ? `Transposing from ${sourceKey} to ${targetKey}` 
-        : undefined
-    };
-  }
-
-  static createFileError(
-    message: string, 
-    filename?: string, 
-    fileSize?: number
-  ): ConversionError {
-    return {
-      type: ConversionErrorType.FILE_ERROR,
-      message,
-      suggestion: 'Ensure the file is a valid text file and not corrupted',
-      recoverable: false,
-      context: filename ? `File: ${filename}${fileSize ? ` (${fileSize} bytes)` : ''}` : undefined
-    };
-  }
-
-  static createValidationError(
-    message: string, 
-    field?: string, 
-    value?: string
-  ): ConversionError {
+  static createValidationError(message: string, lineNumber?: number, columnNumber?: number, suggestion?: string, originalInput?: string): ConversionError {
     return {
       type: ConversionErrorType.VALIDATION_ERROR,
       message,
-      suggestion: 'Check the input values and try again',
+      line: lineNumber,
+      column: columnNumber,
+      suggestion,
       recoverable: true,
-      context: field && value ? `Field: ${field}, Value: ${value}` : undefined
+      originalInput,
+      context: originalInput
     };
   }
 
-  static createConversionError(
-    message: string, 
-    originalError?: Error
-  ): ConversionError {
+  static createConversionError(message: string, originalInput?: string): ConversionError {
     return {
       type: ConversionErrorType.CONVERSION_ERROR,
       message,
-      suggestion: 'Try a different conversion approach or check the input format',
-      recoverable: true,
-      originalError
+      recoverable: false,
+      originalInput,
+      context: originalInput
+    };
+  }
+
+  static createFileError(message: string): ConversionError {
+    return {
+      type: ConversionErrorType.FILE_ERROR,
+      message,
+      recoverable: false
+    };
+  }
+
+  static createUnknownError(message: string): ConversionError {
+    return {
+      type: ConversionErrorType.UNKNOWN_ERROR,
+      message,
+      recoverable: false
     };
   }
 }

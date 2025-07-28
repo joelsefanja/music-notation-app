@@ -6,6 +6,12 @@
 export const CHROMATIC_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 export const CHROMATIC_NOTES_FLAT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
+// Mapping van noten naar hun positie in de chromatische schaal
+export const NOTE_TO_CHROMATIC_INDEX: { [key: string]: number } = {
+  'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5,
+  'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11
+};
+
 // Major keys and their corresponding notes (using sharps/flats as appropriate)
 export const MAJOR_KEY_SIGNATURES: Record<string, string[]> = {
   'C': ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
@@ -62,6 +68,58 @@ Object.keys(MAJOR_KEY_SIGNATURES).forEach(key => {
     [scale[5]]: '6',
     [scale[6]]: '7'
   };
+  // Voeg chromatische noten toe aan de mappings voor majeurtoonsoorten
+  CHROMATIC_NOTES.forEach((note, index) => {
+    if (!NASHVILLE_MAJOR_MAPPINGS[key][note]) {
+      // Bereken het diatonische interval en voeg een accidental toe
+      // Dit is een vereenvoudigde logica. De `getChromaticNashvilleNumber` in nashville-converter.ts
+      // zal een nauwkeurigere berekening uitvoeren.
+      const rootIndex = CHROMATIC_NOTES.indexOf(scale[0]);
+      const relativeIndex = (index - rootIndex + 12) % 12;
+      let nashvilleNumber = '';
+      let accidental = '';
+
+      // Zoek de dichtstbijzijnde diatonische graad
+      let closestDegree = 0;
+      let minDistance = 12;
+
+      for (let i = 0; i < scale.length; i++) {
+        const scaleNoteIndex = CHROMATIC_NOTES.indexOf(scale[i]);
+        const distance = (index - scaleNoteIndex + 12) % 12;
+        if (distance === 0) { // Exacte match
+          nashvilleNumber = (i + 1).toString();
+          minDistance = 0;
+          break;
+        } else if (distance === 1) { // Een halve toon hoger
+          if (minDistance > 1) {
+            minDistance = 1;
+            closestDegree = i + 1;
+            accidental = '#';
+          }
+        } else if (distance === 11) { // Een halve toon lager (of -1)
+          if (minDistance > 1) {
+            minDistance = 1;
+            closestDegree = i + 1;
+            accidental = 'b';
+          }
+        }
+      }
+
+      if (minDistance === 0) {
+        // Al afgehandeld
+      } else if (minDistance === 1) {
+        nashvilleNumber = accidental + closestDegree;
+      } else {
+        // Fallback voor noten die niet direct in de schaal of als #/b van een schaalnoot vallen
+        // Dit zou minder vaak moeten voorkomen met de verbeterde getChromaticNashvilleNumber
+        // We kunnen hier een generieke mapping toevoegen of het overlaten aan de runtime logica
+      }
+
+      if (nashvilleNumber) {
+        NASHVILLE_MAJOR_MAPPINGS[key][note] = nashvilleNumber;
+      }
+    }
+  });
 });
 
 // Initialize Nashville mappings for minor keys
@@ -70,13 +128,59 @@ Object.keys(MINOR_KEY_SIGNATURES).forEach(key => {
   NASHVILLE_MINOR_MAPPINGS[key] = {
     [scale[0]]: '1m',
     [scale[1]]: '2°',
-    [scale[2]]: 'b3',
+    [scale[2]]: 'b3', // Natuurlijke mineur 3e graad
     [scale[3]]: '4m',
     [scale[4]]: '5m',
-    [scale[5]]: 'b6',
-    [scale[6]]: 'b7'
+    [scale[5]]: 'b6', // Natuurlijke mineur 6e graad
+    [scale[6]]: 'b7'  // Natuurlijke mineur 7e graad
   };
+  // Voeg chromatische noten toe aan de mappings voor mineurtoonsoorten
+  CHROMATIC_NOTES.forEach((note, index) => {
+    if (!NASHVILLE_MINOR_MAPPINGS[key][note]) {
+      // Bereken het diatonische interval en voeg een accidental toe
+      const rootIndex = CHROMATIC_NOTES.indexOf(scale[0]);
+      const relativeIndex = (index - rootIndex + 12) % 12;
+      let nashvilleNumber = '';
+      let accidental = '';
+
+      let closestDegree = 0;
+      let minDistance = 12;
+
+      for (let i = 0; i < scale.length; i++) {
+        const scaleNoteIndex = CHROMATIC_NOTES.indexOf(scale[i]);
+        const distance = (index - scaleNoteIndex + 12) % 12;
+        if (distance === 0) {
+          nashvilleNumber = (i + 1).toString();
+          minDistance = 0;
+          break;
+        } else if (distance === 1) {
+          if (minDistance > 1) {
+            minDistance = 1;
+            closestDegree = i + 1;
+            accidental = '#';
+          }
+        } else if (distance === 11) {
+          if (minDistance > 1) {
+            minDistance = 1;
+            closestDegree = i + 1;
+            accidental = 'b';
+          }
+        }
+      }
+
+      if (minDistance === 0) {
+        // Al afgehandeld
+      } else if (minDistance === 1) {
+        nashvilleNumber = accidental + closestDegree;
+      }
+
+      if (nashvilleNumber) {
+        NASHVILLE_MINOR_MAPPINGS[key][note] = nashvilleNumber;
+      }
+    }
+  });
 });
+
 
 // Chord quality mappings
 export const CHORD_QUALITIES: Record<string, string> = {

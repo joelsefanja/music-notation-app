@@ -20,9 +20,9 @@ export const EditorSplitView: React.FC<EditorSplitViewProps> = ({
   error = null
 }) => {
   return (
-    <div className="flex-1 flex bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div className="flex-1 flex bg-white dark:bg-dark-bg rounded-lg shadow-sm border border-gray-200 dark:border-dark-border overflow-hidden transition-colors duration-200">
       {/* Input Editor */}
-      <div className="flex-1 border-r border-gray-200">
+      <div className="flex-1 border-r border-gray-200 dark:border-dark-border">
         <InputEditor
           value={inputValue}
           onChange={onInputChange}

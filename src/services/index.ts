@@ -2,18 +2,18 @@
 export { FormatDetector } from './format-detector';
 export type { FormatDetectionResult } from './format-detector';
 
-export { AutoKeyDetection } from './auto-key-detection';
-export type { KeyDetectionResult } from './auto-key-detection';
+export { AutoKeyDetection } from './key-detector';
+export type { KeyDetectionResult } from './key-detector';
 
-export { ConversionEngine } from './conversion-engine';
-export type { ConversionResult, ConversionError, ConversionOptions } from './conversion-engine';
+export { ConversionEngine } from './conversion-engine-old/conversion-engine';
+export type { ConversionResult, ConversionError, ConversionOptions } from './conversion-engine-old/conversion-engine';
 
 // File operations
 export { FileOperations } from './file-operations';
 export type { ImportResult, ExportOptions, FileValidationResult } from './file-operations';
 
 // Error handling
-export { ErrorRecovery } from './error-recovery';
+export { ErrorRecovery } from './error-recovery/error-recovery';
 
 // Storage services
 export { LocalStorageProvider } from './storage/local-storage-provider';
