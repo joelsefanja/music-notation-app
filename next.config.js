@@ -10,6 +10,11 @@ module.exports = withPWA({
   eslint: {
     ignoreDuringBuilds: true,
   },
+  allowedDevOrigins: [
+    'e4c85ae4-4187-40dc-bca8-eb7bfb435574-00-2sclfa3cdiby7.kirk.repl.co',
+    '.repl.co',
+    'localhost:3000'
+  ],
   webpack: (config, { isServer }) => {
     // Only apply obfuscation to client-side JavaScript
     if (!isServer) {
