@@ -76,7 +76,7 @@ const contentVariants: Variants = {
     opacity: 1,
     transition: {
       duration: 0.4,
-      ease: "easeOut",
+      ease: 'easeOut',
     },
   },
   exit: {
@@ -84,7 +84,7 @@ const contentVariants: Variants = {
     opacity: 0,
     transition: {
       duration: 0.3,
-      ease: "easeIn",
+      ease: 'easeIn',
     },
   },
 };
@@ -95,27 +95,28 @@ const contentVariants: Variants = {
 const FormatIndicator: React.FC<FormatIndicatorProps> = ({
   format,
   isActive,
-  className = ''
+  className = '',
 }) => {
   return (
     <motion.div
       className={`
         inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
         transition-colors duration-200 ${className}
-        ${isActive 
-          ? 'bg-blue-100 text-blue-700 border border-blue-300' 
-          : 'bg-gray-100 text-gray-600 border border-gray-300'
+        ${
+          isActive
+            ? 'bg-blue-100 text-blue-700 border border-blue-300'
+            : 'bg-gray-100 text-gray-600 border border-gray-300'
         }
       `}
       animate={{
         scale: isActive ? 1.05 : 1,
-        boxShadow: isActive 
-          ? '0 4px 12px rgba(59, 130, 246, 0.15)' 
+        boxShadow: isActive
+          ? '0 4px 12px rgba(59, 130, 246, 0.15)'
           : '0 1px 3px rgba(0, 0, 0, 0.1)',
       }}
       transition={{
         duration: 0.2,
-        ease: "easeOut",
+        ease: 'easeOut',
       }}
       whileHover={{
         scale: 1.02,
@@ -143,7 +144,7 @@ export const FormatTransition: React.FC<FormatTransitionProps> = ({
   children,
   transitionType = 'fade',
   duration = 0.5,
-  className = ''
+  className = '',
 }) => {
   const variants = transitionVariants[transitionType];
 
@@ -166,7 +167,7 @@ export const FormatTransition: React.FC<FormatTransitionProps> = ({
             </motion.div>
           )}
         </div>
-        
+
         {/* Transition progress indicator */}
         <motion.div
           className="w-16 h-1 bg-gray-200 rounded-full overflow-hidden"
@@ -178,7 +179,7 @@ export const FormatTransition: React.FC<FormatTransitionProps> = ({
             className="h-full bg-blue-500 rounded-full"
             initial={{ width: '0%' }}
             animate={{ width: '100%' }}
-            transition={{ duration: duration, ease: "easeInOut" }}
+            transition={{ duration: duration, ease: 'easeInOut' }}
           />
         </motion.div>
       </div>
@@ -193,7 +194,7 @@ export const FormatTransition: React.FC<FormatTransitionProps> = ({
           exit="exit"
           transition={{
             duration: duration,
-            ease: "easeInOut",
+            ease: 'easeInOut',
           }}
           className="relative"
         >
@@ -201,16 +202,13 @@ export const FormatTransition: React.FC<FormatTransitionProps> = ({
             variants={variants}
             transition={{
               duration: duration,
-              ease: "easeInOut",
+              ease: 'easeInOut',
             }}
             style={{
-              transformOrigin: "center",
+              transformOrigin: 'center',
             }}
           >
-            <motion.div
-              variants={contentVariants}
-              className="relative"
-            >
+            <motion.div variants={contentVariants} className="relative">
               {children}
             </motion.div>
           </motion.div>
@@ -228,20 +226,23 @@ export const useFormatTransition = () => {
   const [previousFormat, setPreviousFormat] = React.useState<string>('');
   const [isTransitioning, setIsTransitioning] = React.useState(false);
 
-  const changeFormat = React.useCallback((newFormat: string) => {
-    if (newFormat === currentFormat) return;
+  const changeFormat = React.useCallback(
+    (newFormat: string) => {
+      if (newFormat === currentFormat) return;
 
-    setIsTransitioning(true);
-    setPreviousFormat(currentFormat);
-    
-    // Small delay to ensure smooth transition
-    setTimeout(() => {
-      setCurrentFormat(newFormat);
+      setIsTransitioning(true);
+      setPreviousFormat(currentFormat);
+
+      // Small delay to ensure smooth transition
       setTimeout(() => {
-        setIsTransitioning(false);
-      }, 500); // Match transition duration
-    }, 50);
-  }, [currentFormat]);
+        setCurrentFormat(newFormat);
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 500); // Match transition duration
+      }, 50);
+    },
+    [currentFormat]
+  );
 
   const resetTransition = React.useCallback(() => {
     setIsTransitioning(false);
