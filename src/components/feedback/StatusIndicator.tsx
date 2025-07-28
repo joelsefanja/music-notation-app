@@ -73,7 +73,7 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
                 {getConfidenceText(formatDetection.confidence)} ({Math.round(formatDetection.confidence * 100)}%)
               </span>
             </div>
-            {formatDetection.indicators.length > 0 && (
+            {formatDetection.indicators && formatDetection.indicators.length > 0 && (
               <div className="text-xs text-gray-500 dark:text-gray-400">
                 Indicators: {formatDetection.indicators.join(', ')}
               </div>
@@ -93,7 +93,7 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
                 {getConfidenceText(keyDetection.confidence)} ({Math.round(keyDetection.confidence * 100)}%)
               </span>
             </div>
-            {keyDetection.analysis.progressionMatches.length > 0 && (
+            {keyDetection.analysis?.progressionMatches && keyDetection.analysis.progressionMatches.length > 0 && (
               <div className="text-xs text-gray-500 dark:text-gray-400">
                 Progressions: {keyDetection.analysis.progressionMatches.slice(0, 3).join(', ')}
                 {keyDetection.analysis.progressionMatches.length > 3 && '...'}
