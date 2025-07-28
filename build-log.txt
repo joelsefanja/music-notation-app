@@ -1,0 +1,108 @@
+
+> conversion-engine-solid@2.0.0 prebuild
+> npm run clean
+
+
+> conversion-engine-solid@2.0.0 clean
+> rimraf dist coverage
+
+
+> conversion-engine-solid@2.0.0 build
+> next build
+
+   ▲ Next.js 15.4.4
+
+   Creating an optimized production build ...
+> [PWA] Compile server
+> [PWA] Compile server
+> [PWA] Compile client (static)
+> [PWA] Auto register service worker with: /home/runner/workspace/node_modules/next-pwa/register.js
+> [PWA] Service worker: /home/runner/workspace/public/sw.js
+> [PWA]   url: /sw.js
+> [PWA]   scope: /
+ ⚠ Compiled with warnings in 27.0s
+
+./src/types/index.ts
+export 'BaseLine' (reexported as 'BaseLine') was not found in './line' (possible exports: AnnotationFormat, NashvilleQuality, NotationFormat, SectionType, isAnnotationLine, isChordLine, isEmptyLine, isLyricLine, isTextLine, validateLine)
+
+Import trace for requested module:
+./src/types/index.ts
+./src/components/MusicConverter.tsx
+./src/app/page.tsx
+
+./src/types/index.ts
+export 'ChordLine' (reexported as 'ChordLine') was not found in './line' (possible exports: AnnotationFormat, NashvilleQuality, NotationFormat, SectionType, isAnnotationLine, isChordLine, isEmptyLine, isLyricLine, isTextLine, validateLine)
+
+Import trace for requested module:
+./src/types/index.ts
+./src/components/MusicConverter.tsx
+./src/app/page.tsx
+
+./src/types/index.ts
+export 'LyricLine' (reexported as 'LyricLine') was not found in './line' (possible exports: AnnotationFormat, NashvilleQuality, NotationFormat, SectionType, isAnnotationLine, isChordLine, isEmptyLine, isLyricLine, isTextLine, validateLine)
+
+Import trace for requested module:
+./src/types/index.ts
+./src/components/MusicConverter.tsx
+./src/app/page.tsx
+
+./src/types/index.ts
+export 'AnnotationLine' (reexported as 'AnnotationLine') was not found in './line' (possible exports: AnnotationFormat, NashvilleQuality, NotationFormat, SectionType, isAnnotationLine, isChordLine, isEmptyLine, isLyricLine, isTextLine, validateLine)
+
+Import trace for requested module:
+./src/types/index.ts
+./src/components/MusicConverter.tsx
+./src/app/page.tsx
+
+./src/types/index.ts
+export 'BaseLine' (reexported as 'BaseLine') was not found in './line' (possible exports: AnnotationFormat, NashvilleQuality, NotationFormat, SectionType, isAnnotationLine, isChordLine, isEmptyLine, isLyricLine, isTextLine, validateLine)
+
+Import trace for requested module:
+./src/types/index.ts
+./src/components/MusicConverter.tsx
+./src/app/page.tsx
+
+./src/types/index.ts
+export 'ChordLine' (reexported as 'ChordLine') was not found in './line' (possible exports: AnnotationFormat, NashvilleQuality, NotationFormat, SectionType, isAnnotationLine, isChordLine, isEmptyLine, isLyricLine, isTextLine, validateLine)
+
+Import trace for requested module:
+./src/types/index.ts
+./src/components/MusicConverter.tsx
+./src/app/page.tsx
+
+./src/types/index.ts
+export 'LyricLine' (reexported as 'LyricLine') was not found in './line' (possible exports: AnnotationFormat, NashvilleQuality, NotationFormat, SectionType, isAnnotationLine, isChordLine, isEmptyLine, isLyricLine, isTextLine, validateLine)
+
+Import trace for requested module:
+./src/types/index.ts
+./src/components/MusicConverter.tsx
+./src/app/page.tsx
+
+./src/types/index.ts
+export 'AnnotationLine' (reexported as 'AnnotationLine') was not found in './line' (possible exports: AnnotationFormat, NashvilleQuality, NotationFormat, SectionType, isAnnotationLine, isChordLine, isEmptyLine, isLyricLine, isTextLine, validateLine)
+
+Import trace for requested module:
+./src/types/index.ts
+./src/components/MusicConverter.tsx
+./src/app/page.tsx
+
+   Skipping linting
+   Checking validity of types ...
+Failed to compile.
+
+./src/components/MusicConverter.tsx:83:73
+Type error: Expected 1 arguments, but got 2.
+
+[0m [90m 81 |[39m     [90m// Perform detection[39m
+ [90m 82 |[39m     [36mconst[39m formatDetection [33m=[39m conversionEngine[33m.[39mdetectFormat(debouncedInputText)[33m;[39m
+[31m[1m>[22m[39m[90m 83 |[39m     [36mconst[39m keyDetection [33m=[39m conversionEngine[33m.[39mdetectKey(debouncedInputText[33m,[39m formatDetection[33m.[39mformat)[33m;[39m
+ [90m    |[39m                                                                         [31m[1m^[22m[39m
+ [90m 84 |[39m
+ [90m 85 |[39m     setState(prev [33m=>[39m ({
+ [90m 86 |[39m       [33m...[39mprev[33m,[39m[0m
+Next.js build worker exited with code: 1 and signal: null
+npm notice
+npm notice New minor version of npm available! 11.4.2 -> 11.5.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.5.1
+npm notice To update run: npm install -g npm@11.5.1
+npm notice
