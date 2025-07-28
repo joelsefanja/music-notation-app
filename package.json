@@ -22,7 +22,6 @@
     "format:check": "prettier --check src/**/*.ts",
     "clean": "rimraf dist coverage",
     "prebuild": "npm run clean",
-    "pretest": "npm run build",
     "example": "ts-node src/examples/solid-architecture-example.ts",
     "benchmark": "npm run test:performance",
     "docs": "typedoc src --out docs/api",
