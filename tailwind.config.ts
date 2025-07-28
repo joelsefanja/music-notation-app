@@ -1,3 +1,4 @@
+
 import type { Config } from 'tailwindcss'
 
 const config: Config = {
@@ -6,14 +7,12 @@ const config: Config = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
-  darkMode: 'class',
   theme: {
     extend: {
       fontFamily: {
         mono: ['JetBrains Mono', 'Consolas', 'Monaco', 'Courier New', 'monospace'],
       },
       colors: {
-        // Dark mode specific colors
         dark: {
           bg: '#000000',
           text: '#FFFFFF',
@@ -29,4 +28,5 @@ const config: Config = {
   },
   plugins: [],
 }
+
 export default config
