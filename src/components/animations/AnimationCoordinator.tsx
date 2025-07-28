@@ -339,3 +339,44 @@ export const AnimationPerformanceMonitor: React.FC<{
 
   return null; // This is a monitoring component, no UI
 };
+'use client';
+
+import React, { createContext, useContext, ReactNode } from 'react';
+
+interface AnimationContextType {
+  isAnimating: boolean;
+  setAnimating: (animating: boolean) => void;
+}
+
+const AnimationContext = createContext<AnimationContextType | null>(null);
+
+interface AnimationCoordinatorProps {
+  children: ReactNode;
+}
+
+export const AnimationCoordinator: React.FC<AnimationCoordinatorProps> = ({ children }) => {
+  const [isAnimating, setIsAnimating] = React.useState(false);
+
+  const setAnimating = React.useCallback((animating: boolean) => {
+    setIsAnimating(animating);
+  }, []);
+
+  const value = React.useMemo(() => ({
+    isAnimating,
+    setAnimating,
+  }), [isAnimating, setAnimating]);
+
+  return (
+    <AnimationContext.Provider value={value}>
+      {children}
+    </AnimationContext.Provider>
+  );
+};
+
+export const useAnimation = () => {
+  const context = useContext(AnimationContext);
+  if (!context) {
+    throw new Error('useAnimation must be used within an AnimationCoordinator');
+  }
+  return context;
+};
