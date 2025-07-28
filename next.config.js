@@ -13,10 +13,9 @@ module.exports = withPWA({
   allowedDevOrigins: [
     'e4c85ae4-4187-40dc-bca8-eb7bfb435574-00-2sclfa3cdiby7.kirk.repl.co',
     '.repl.co',
-    'localhost:3000'
+    '0.0.0.0:3000'
   ],
   webpack: (config, { isServer }) => {
-    // Only apply obfuscation to client-side JavaScript
     if (!isServer) {
       config.plugins.push(
         new webpackObfuscator({
@@ -39,15 +38,14 @@ module.exports = withPWA({
           stringArrayThreshold: 0.75,
           transformObjectKeys: true,
           unicodeEscapeSequence: true,
-          sourceMap: false, // Ensure source maps are not generated
-          // Exclude node_modules and .next directory from obfuscation
+          sourceMap: false,
           exclude: [
             'node_modules',
             /\.next\//,
             /.*\.css$/,
             /.*\.json$/,
           ],
-        }, ['**/*.js']) // Apply obfuscation to all .js files
+        }, ['**/*.js'])
       );
     }
 

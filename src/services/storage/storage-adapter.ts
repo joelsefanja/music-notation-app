@@ -5,9 +5,8 @@
  */
 
 import { IStorageAdapter } from '../../types/interfaces/core-interfaces';
-import * as fs from 'fs/promises';
+import { promises as fs } from 'fs';
 import * as path from 'path';
-
 /**
  * File system storage adapter
  */
