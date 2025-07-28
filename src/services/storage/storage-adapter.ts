@@ -1,3 +1,4 @@
+'use server';
 /**
  * Storage Adapter implementations using Adapter pattern
  * Provides abstraction over different storage backends
