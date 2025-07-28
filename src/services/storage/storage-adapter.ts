@@ -5,8 +5,15 @@
  */
 
 import { IStorageAdapter } from '../../types/interfaces/core-interfaces';
-import * as fs from 'fs/promises';
-import * as path from 'path';
+
+// Only import Node.js modules on server-side
+let fs: typeof import('fs/promises');
+let path: typeof import('path');
+
+if (typeof window === 'undefined') {
+  fs = require('fs/promises');
+  path = require('path');
+}
 
 /**
  * File system storage adapter
