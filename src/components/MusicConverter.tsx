@@ -80,7 +80,7 @@ export const MusicConverter: React.FC = () => {
 
     // Perform detection
     const formatDetection = conversionEngine.detectFormat(debouncedInputText);
-    const keyDetection = conversionEngine.detectKey(debouncedInputText, formatDetection.format);
+    const keyDetection = conversionEngine.detectKey(debouncedInputText);
 
     setState(prev => ({
       ...prev,
