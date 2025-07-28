@@ -1,7 +1,7 @@
-'use server';
 /**
  * Storage Adapter implementations using Adapter pattern
  * Provides abstraction over different storage backends
+ * NOTE: This file is for server-side use only (API Routes)
  */
 
 import { IStorageAdapter } from '../../types/interfaces/core-interfaces';
@@ -37,10 +37,10 @@ export class FileSystemStorageAdapter implements IStorageAdapter {
     try {
       const fullPath = this.getFullPath(filePath);
       const directory = path.dirname(fullPath);
-      
+
       // Ensure directory exists
       await fs.mkdir(directory, { recursive: true });
-      
+
       await fs.writeFile(fullPath, content, 'utf-8');
     } catch (error) {
       throw new Error(`Failed to write file ${filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -100,7 +100,7 @@ export class FileSystemStorageAdapter implements IStorageAdapter {
     try {
       const fullPath = this.getFullPath(filePath);
       const stats = await fs.stat(fullPath);
-      
+
       return {
         size: stats.size,
         created: stats.birthtime,
@@ -133,10 +133,10 @@ export class FileSystemStorageAdapter implements IStorageAdapter {
       const sourceFullPath = this.getFullPath(sourcePath);
       const destFullPath = this.getFullPath(destinationPath);
       const destDirectory = path.dirname(destFullPath);
-      
+
       // Ensure destination directory exists
       await fs.mkdir(destDirectory, { recursive: true });
-      
+
       await fs.copyFile(sourceFullPath, destFullPath);
     } catch (error) {
       throw new Error(`Failed to copy file from ${sourcePath} to ${destinationPath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -151,10 +151,10 @@ export class FileSystemStorageAdapter implements IStorageAdapter {
       const sourceFullPath = this.getFullPath(sourcePath);
       const destFullPath = this.getFullPath(destinationPath);
       const destDirectory = path.dirname(destFullPath);
-      
+
       // Ensure destination directory exists
       await fs.mkdir(destDirectory, { recursive: true });
-      
+
       await fs.rename(sourceFullPath, destFullPath);
     } catch (error) {
       throw new Error(`Failed to move file from ${sourcePath} to ${destinationPath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -167,7 +167,7 @@ export class FileSystemStorageAdapter implements IStorageAdapter {
     if (normalizedPath.includes('..')) {
       throw new Error('Path traversal is not allowed');
     }
-    
+
     return path.join(this.basePath, normalizedPath);
   }
 
@@ -210,7 +210,7 @@ export class InMemoryStorageAdapter implements IStorageAdapter {
   async write(path: string, content: string): Promise<void> {
     const now = new Date();
     const existing = this.metadata.get(path);
-    
+
     this.storage.set(path, content);
     this.metadata.set(path, {
       created: existing?.created || now,
@@ -232,7 +232,7 @@ export class InMemoryStorageAdapter implements IStorageAdapter {
     if (!this.storage.has(path)) {
       throw new Error(`File not found: ${path}`);
     }
-    
+
     this.storage.delete(path);
     this.metadata.delete(path);
   }
@@ -243,7 +243,7 @@ export class InMemoryStorageAdapter implements IStorageAdapter {
   async list(directory: string): Promise<string[]> {
     const normalizedDir = directory.endsWith('/') ? directory : directory + '/';
     const files: string[] = [];
-    
+
     for (const filePath of this.storage.keys()) {
       if (filePath.startsWith(normalizedDir)) {
         const relativePath = filePath.substring(normalizedDir.length);
@@ -253,7 +253,7 @@ export class InMemoryStorageAdapter implements IStorageAdapter {
         }
       }
     }
-    
+
     return files;
   }
 
@@ -287,78 +287,6 @@ export class InMemoryStorageAdapter implements IStorageAdapter {
   }
 }
 
-/**
- * Database storage adapter (placeholder implementation)
- */
-export class DatabaseStorageAdapter implements IStorageAdapter {
-  private connectionString: string;
-  private tableName: string;
-
-  constructor(connectionString: string, tableName = 'file_storage') {
-    this.connectionString = connectionString;
-    this.tableName = tableName;
-  }
-
-  async read(path: string): Promise<string> {
-    // This would implement actual database operations
-    throw new Error('Database storage adapter not fully implemented');
-  }
-
-  async write(path: string, content: string): Promise<void> {
-    // This would implement actual database operations
-    throw new Error('Database storage adapter not fully implemented');
-  }
-
-  async exists(path: string): Promise<boolean> {
-    // This would implement actual database operations
-    throw new Error('Database storage adapter not fully implemented');
-  }
-
-  async delete(path: string): Promise<void> {
-    // This would implement actual database operations
-    throw new Error('Database storage adapter not fully implemented');
-  }
-
-  async list(directory: string): Promise<string[]> {
-    // This would implement actual database operations
-    throw new Error('Database storage adapter not fully implemented');
-  }
-}
-
-/**
- * Cloud storage adapter (placeholder implementation)
- */
-export class CloudStorageAdapter implements IStorageAdapter {
-  private bucketName: string;
-  private credentials: any;
-
-  constructor(bucketName: string, credentials: any) {
-    this.bucketName = bucketName;
-    this.credentials = credentials;
-  }
-
-  async read(path: string): Promise<string> {
-    // This would implement actual cloud storage operations (AWS S3, Google Cloud, etc.)
-    throw new Error('Cloud storage adapter not fully implemented');
-  }
-
-  async write(path: string, content: string): Promise<void> {
-    // This would implement actual cloud storage operations
-    throw new Error('Cloud storage adapter not fully implemented');
-  }
-
-  async exists(path: string): Promise<boolean> {
-    // This would implement actual cloud storage operations
-    throw new Error('Cloud storage adapter not fully implemented');
-  }
-
-  async delete(path: string): Promise<void> {
-    // This would implement actual cloud storage operations
-    throw new Error('Cloud storage adapter not fully implemented');
-  }
-
-  async list(directory: string): Promise<string[]> {
-    // This would implement actual cloud storage operations
-    throw new Error('Cloud storage adapter not fully implemented');
-  }
-}
+// Singleton instance for use in API routes
+export const fileSystemStorage = new FileSystemStorageAdapter();
+export const inMemoryStorage = new InMemoryStorageAdapter();
