@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { NotationFormat } from '../types';
-import { ConversionEngine } from '../services/conversion-engine-old/conversion-engine';
+import { EnhancedConversionEngine } from '../services/conversion-engine/enhanced-conversion-engine';
 import { FormatDetectionResult } from '../services/format-detector';
 import { KeyDetectionResult } from '../services/key-detector';
 import { useDebounce } from '../hooks/useDebounce';
@@ -43,7 +43,7 @@ export const MusicConverter: React.FC = () => {
     isDetecting: false
   });
 
-  const [conversionEngine] = useState(() => new ConversionEngine());
+  const [conversionEngine] = useState(() => new EnhancedConversionEngine());
   
   // Debounce input text to avoid excessive API calls
   const debouncedInputText = useDebounce(state.inputText, 300);
