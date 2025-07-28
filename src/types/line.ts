@@ -1,4 +1,5 @@
-// src/types/index.ts
+
+// src/types/line.ts
 
 /**
  * Enumeration of supported music notation formats
@@ -44,29 +45,14 @@ export enum AnnotationFormat {
 }
 
 /**
- * Interface for a musical section, potentially containing chords or other content.
+ * Interface for a chord with its position information
  */
-export interface Section {
-  id: string; // Unieke identificatie voor de sectie
-  type: SectionType; // Type sectie (bijv. 'verse', 'chorus')
-  name?: string; // Optionele naam voor de sectie (bijv. "Verse 1")
-  content: string; // De tekstuele inhoud van de sectie (bijv. songteksten)
-  chords?: ChordPlacement[]; // Optioneel: een array van akkoorden die aan deze sectie zijn gekoppeld
-  title?: string; // Optioneel: een titel voor de sectie
-  // Voeg hier andere eigenschappen toe die relevant zijn voor je app
-}
-
-/**
- * Interface for an annotation.
- */
-export interface Annotation {
-  id: string;
-  text: string;
+export interface Chord {
+  value: string;
+  originalText: string;
   startIndex: number;
   endIndex: number;
-  format: AnnotationFormat;
-  position: 'above' | 'inline' | 'beside'; // Waar de annotatie geplaatst wordt t.o.v. de tekst
-  annotationType: 'comment' | 'section' | 'instruction' | 'tempo' | 'dynamics'; // Classificatie van de annotatie
+  placement?: 'above' | 'inline' | 'between';
 }
 
 /**
@@ -81,11 +67,37 @@ export interface ChordPlacement {
 }
 
 /**
+ * Base interface for all line types
+ */
+export interface BaseLine {
+  type: string;
+  content: string;
+  lineNumber?: number;
+  metadata?: Record<string, any>;
+}
+
+/**
  * Basisinterface voor alle soorten lijnen in een geanalyseerd document.
  */
 export interface Line {
-  type: 'text' | 'empty' | 'annotation';
+  type: 'text' | 'empty' | 'annotation' | 'chord' | 'lyric';
   lineNumber: number; // Het originele regelnummer in de invoertekst
+}
+
+/**
+ * Chord line type
+ */
+export interface ChordLine extends BaseLine {
+  type: 'chord';
+  chords: Chord[];
+}
+
+/**
+ * Lyric line type
+ */
+export interface LyricLine extends BaseLine {
+  type: 'lyric';
+  lyrics: string;
 }
 
 /**
@@ -108,20 +120,11 @@ export interface EmptyLine extends Line {
 /**
  * Representeert een annotatieregel (bijv. commentaren, sectietitels).
  */
-export interface AnnotationLine extends Line {
+export interface AnnotationLine extends BaseLine {
   type: 'annotation';
-  value: string; // De inhoud van de annotatie (bijv. "Verse 1", "Chorus")
-  annotationType: 'comment' | 'section' | 'instruction' | 'tempo' | 'dynamics'; // Classificatie van de annotatie
-}
-
-/**
- * Resultaat van het parsen van een annotatie, inclusief de originele tekst en positie.
- */
-export interface IAnnotationParseResult {
-  annotation: Annotation;
-  originalText: string;
-  startIndex: number;
-  endIndex: number;
+  annotation: string;
+  value?: string; // De inhoud van de annotatie (bijv. "Verse 1", "Chorus")
+  annotationType?: 'comment' | 'section' | 'instruction' | 'tempo' | 'dynamics'; // Classificatie van de annotatie
 }
 
 /**
@@ -159,7 +162,7 @@ export interface RhythmicSymbol {
 
 // Type guards for runtime checking
 export const isChordLine = (line: Line): line is TextLine => {
-  return line.type === 'text' && line.chords !== undefined;
+  return line.type === 'text' && 'chords' in line;
 };
 
 export const isLyricLine = (line: Line): line is TextLine => {
@@ -181,25 +184,3 @@ export const isAnnotationLine = (line: Line): line is AnnotationLine => {
 export const validateLine = (line: Line): boolean => {
   return line !== undefined;
 };
-
-// Export the actual line types that are missing
-export interface BaseLine {
-  type: string;
-  content: string;
-  metadata?: Record<string, any>;
-}
-
-export interface ChordLine extends BaseLine {
-  type: 'chord';
-  chords: Chord[];
-}
-
-export interface LyricLine extends BaseLine {
-  type: 'lyric';
-  lyrics: string;
-}
-
-export interface AnnotationLine extends BaseLine {
-  type: 'annotation';
-  annotation: string;
-}

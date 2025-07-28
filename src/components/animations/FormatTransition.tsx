@@ -1,7 +1,9 @@
 'use client';
 
-import React from 'react';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
+// src/components/animations/FormatTransition.tsx
+
+import React, { ReactNode } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface FormatTransitionProps {
   currentFormat: string;

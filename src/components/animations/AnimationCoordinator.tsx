@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
@@ -55,11 +54,11 @@ const animationReducer = (state: AnimationState, action: AnimationAction): Anima
     case 'END_ANIMATION':
       const newActiveAnimations = new Set(state.activeAnimations);
       newActiveAnimations.delete(action.payload.id);
-      
+
       // Start next queued animation if any
       const nextAnimation = state.queuedAnimations
         .sort((a, b) => b.priority - a.priority)[0];
-      
+
       if (nextAnimation && newActiveAnimations.size < getMaxConcurrentAnimations(state.performanceMode)) {
         newActiveAnimations.add(nextAnimation.id);
         return {
@@ -170,15 +169,15 @@ export const AnimationCoordinator: React.FC<{ children: React.ReactNode }> = ({ 
   const canStartAnimation = useCallback((priority: number) => {
     const maxConcurrent = getMaxConcurrentAnimations(state.performanceMode);
     const currentCount = state.activeAnimations.size;
-    
+
     if (currentCount < maxConcurrent) return true;
-    
+
     // Check if this animation has higher priority than queued ones
     const lowestQueuedPriority = Math.min(
       ...state.queuedAnimations.map(anim => anim.priority),
       Infinity
     );
-    
+
     return priority > lowestQueuedPriority;
   }, [state.activeAnimations.size, state.queuedAnimations, state.performanceMode]);
 
@@ -191,7 +190,7 @@ export const AnimationCoordinator: React.FC<{ children: React.ReactNode }> = ({ 
       (typeof window !== 'undefined' && 
        window.matchMedia && 
        window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-    
+
     return {
       reducedMotion,
       maxConcurrentAnimations: getMaxConcurrentAnimations(state.performanceMode),
@@ -233,7 +232,7 @@ export const useAnimationCoordinator = () => {
  */
 export const useAnimation = () => {
   const { isAnimationActive, startAnimation, endAnimation } = useAnimationCoordinator();
-  
+
   return {
     isAnimating: false, // For backward compatibility
     setAnimating: (animating: boolean) => {
@@ -317,7 +316,7 @@ export const AnimationPerformanceMonitor: React.FC<{
     const measureFPS = () => {
       frameCountRef.current++;
       const now = performance.now();
-      
+
       if (now - lastTimeRef.current >= 1000) {
         const currentFPS = Math.round((frameCountRef.current * 1000) / (now - lastTimeRef.current));
         setFps(currentFPS);
