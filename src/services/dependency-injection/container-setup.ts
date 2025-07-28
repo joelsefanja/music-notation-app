@@ -163,15 +163,14 @@ export function setupDependencyContainer(
 /**
  * Create and configure a new dependency container
  */
-export function createConfiguredContainer(options?: {
-  storageType?: 'filesystem' | 'memory';
-  storagePath?: string;
-  errorRecoveryLevel?: 'strict' | 'moderate' | 'permissive';
-}): DependencyContainer {
+export const createContainer = (): DependencyContainer => {
   const container = new DependencyContainer();
   setupDependencyContainer(container, options);
   return container;
 }
+
+// Alias for backward compatibility
+export const setupContainer = createContainer;
 
 /**
  * Register additional parsers with the container

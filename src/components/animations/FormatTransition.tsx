@@ -1,6 +1,9 @@
 'use client';
 
-// src/components/animations/FormatTransition.tsx
+/**
+ * Format Transition Component
+ * Handles smooth transitions between different notation formats
+ */
 
 import React, { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';

@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { NotationFormat } from '../types';
-import { EnhancedConversionEngine } from '../services/conversion-engine/enhanced-conversion-engine';
 import { FormatDetectionResult } from '../services/format-detector';
 import { KeyDetectionResult } from '../services/key-detector';
 import { useDebounce } from '../hooks/useDebounce';
+import { useContainer } from '../hooks/useContainer';
+import { DI_TOKENS } from '../services/dependency-injection/dependency-container';
+import { IConversionEngine } from '../types/interfaces/core-interfaces';
 
 // Components
 import { AppLayout } from './layout/AppLayout';
@@ -31,6 +33,18 @@ interface AppState {
 }
 
 export const MusicConverter: React.FC = () => {
+  const [inputText, setInputText] = useState('');
+  const [outputText, setOutputText] = useState('');
+  const [targetFormat, setTargetFormat] = useState<NotationFormat>(NotationFormat.CHORDPRO);
+  const [sourceFormat, setSourceFormat] = useState<NotationFormat | null>(null);
+  const [isConverting, setIsConverting] = useState(false);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [warnings, setWarnings] = useState<string[]>([]);
+  const [detectedKey, setDetectedKey] = useState<string | null>(null);
+
+  const container = useContainer();
+  const conversionEngine = container.resolve<IConversionEngine>(DI_TOKENS.CONVERSION_ENGINE);
+
   const [state, setState] = useState<AppState>({
     inputText: '',
     outputText: '',
@@ -44,9 +58,6 @@ export const MusicConverter: React.FC = () => {
     keyDetection: null,
     isDetecting: false
   });
-
-  // Create a temporary simple conversion engine for now
-  const conversionEngine = useMemo(() => new EnhancedConversionEngine(), []);
 
   // Debounce input text to avoid excessive API calls
   const debouncedInputText = useDebounce(state.inputText, 300);

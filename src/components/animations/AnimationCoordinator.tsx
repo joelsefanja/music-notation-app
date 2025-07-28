@@ -1,5 +1,10 @@
 'use client';
 
+/**
+ * Animation Coordinator
+ * Manages and synchronizes animations across the application
+ */
+
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
