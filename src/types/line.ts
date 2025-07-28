@@ -156,3 +156,28 @@ export interface RhythmicSymbol {
   position: 'before' | 'after';
   meaning: string;
 }
+
+// Type guards for runtime checking
+export const isChordLine = (line: Line): line is TextLine => {
+  return line.type === 'text' && line.chords !== undefined;
+};
+
+export const isLyricLine = (line: Line): line is TextLine => {
+  return line.type === 'text';
+};
+
+export const isTextLine = (line: Line): line is TextLine => {
+  return line.type === 'text';
+};
+
+export const isEmptyLine = (line: Line): boolean => {
+  return line.type === 'empty';
+};
+
+export const isAnnotationLine = (line: Line): line is AnnotationLine => {
+  return line.type === 'annotation';
+};
+
+export const validateLine = (line: Line): boolean => {
+  return line !== undefined;
+};
