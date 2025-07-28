@@ -66,13 +66,13 @@ export function setupDependencyContainer(
 
   // Register storage adapter
   container.registerSingleton(DI_TOKENS.STORAGE_ADAPTER, () => {
-    switch (storageType) {
-      case 'memory':
-        return new InMemoryStorageAdapter();
-      case 'filesystem':
-      default:
-        // Use client-safe adapter that communicates via API routes
-        return new ClientStorageAdapter();
+    if (typeof window === 'undefined') {
+      // Server-side: use FileSystemStorageAdapter
+      const { FileSystemStorageAdapter } = require('../storage/storage-adapter');
+      return new FileSystemStorageAdapter();
+    } else {
+      // Client-side: use InMemoryStorageAdapter or ClientStorageAdapter
+      return new InMemoryStorageAdapter();
     }
   });
 

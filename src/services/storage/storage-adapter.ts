@@ -5,8 +5,16 @@
  */
 
 import { IStorageAdapter } from '../../types/interfaces/core-interfaces';
-import { promises as fs } from 'fs';
-import * as path from 'path';
+
+// Conditionally import Node.js modules only on server-side
+let fs: any;
+let path: any;
+
+if (typeof window === 'undefined') {
+  // Server-side
+  fs = require('fs').promises;
+  path = require('path');
+}
 /**
  * File system storage adapter
  */
@@ -14,6 +22,9 @@ export class FileSystemStorageAdapter implements IStorageAdapter {
   private basePath: string;
 
   constructor(basePath = './storage') {
+    if (typeof window !== 'undefined') {
+      throw new Error('FileSystemStorageAdapter can only be used on the server side');
+    }
     this.basePath = path.resolve(basePath);
   }
 
