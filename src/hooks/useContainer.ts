@@ -1,4 +1,7 @@
-import { useContext, createContext, useMemo } from 'react';
+
+'use client';
+
+import { useContext, createContext } from 'react';
 import { DependencyContainer } from '../services/dependency-injection/dependency-container';
 import { createConfiguredContainer } from '../services/dependency-injection/container-setup';
 
@@ -37,7 +40,6 @@ export const ContainerProvider = ({
     </ContainerContext.Provider>
   );
 };
-
 
 /**
  * A custom hook to access the DependencyContainer from the context.
