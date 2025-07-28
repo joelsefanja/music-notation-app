@@ -13,6 +13,8 @@ import { EditorToolbar } from './editor/EditorToolbar';
 import { EditorSplitView } from './editor/EditorSplitView';
 import { StatusIndicator } from './feedback/StatusIndicator';
 import { ErrorDisplay } from './feedback/ErrorDisplay';
+import { FormatTransition } from './animations/FormatTransition';
+import { AnimationCoordinator } from './animations/AnimationCoordinator';
 
 interface AppState {
   inputText: string;
@@ -192,59 +194,83 @@ export const MusicConverter: React.FC = () => {
 
   const handleSourceFormatChange = useCallback((format: NotationFormat) => {
     setState(prev => ({ ...prev, sourceFormat: format }));
-  }, []);
+    // Trigger immediate conversion if there's input text
+    if (state.inputText.trim()) {
+      setState(prev => ({ ...prev, isLoading: true }));
+    }
+  }, [state.inputText]);
 
   const handleTargetFormatChange = useCallback((format: NotationFormat) => {
     setState(prev => ({ ...prev, targetFormat: format }));
-  }, []);
+    // Trigger immediate conversion if there's input text
+    if (state.inputText.trim()) {
+      setState(prev => ({ ...prev, isLoading: true }));
+    }
+  }, [state.inputText]);
 
   const handleSourceKeyChange = useCallback((key: string) => {
     setState(prev => ({ ...prev, sourceKey: key }));
-  }, []);
+    // Trigger immediate conversion if there's input text
+    if (state.inputText.trim()) {
+      setState(prev => ({ ...prev, isLoading: true }));
+    }
+  }, [state.inputText]);
 
   const handleTargetKeyChange = useCallback((key: string) => {
     setState(prev => ({ ...prev, targetKey: key }));
-  }, []);
+    // Trigger immediate conversion if there's input text
+    if (state.inputText.trim()) {
+      setState(prev => ({ ...prev, isLoading: true }));
+    }
+  }, [state.inputText]);
 
   const handleErrorDismiss = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));
   }, []);
 
   return (
-    <AppLayout>
-      <div className="space-y-4">
-        {/* Error Display */}
-        <ErrorDisplay error={state.error} onDismiss={handleErrorDismiss} />
+    <AnimationCoordinator>
+      <AppLayout>
+        <div className="space-y-4">
+          {/* Error Display */}
+          <ErrorDisplay error={state.error} onDismiss={handleErrorDismiss} />
 
-        {/* Status Indicator */}
-        <StatusIndicator
-          formatDetection={state.formatDetection}
-          keyDetection={state.keyDetection}
-          isDetecting={state.isDetecting}
-        />
+          {/* Status Indicator */}
+          <StatusIndicator
+            formatDetection={state.formatDetection}
+            keyDetection={state.keyDetection}
+            isDetecting={state.isDetecting}
+          />
 
-        {/* Editor Toolbar */}
-        <EditorToolbar
-          sourceFormat={state.sourceFormat}
-          targetFormat={state.targetFormat}
-          sourceKey={state.sourceKey}
-          targetKey={state.targetKey}
-          onSourceFormatChange={handleSourceFormatChange}
-          onTargetFormatChange={handleTargetFormatChange}
-          onSourceKeyChange={handleSourceKeyChange}
-          onTargetKeyChange={handleTargetKeyChange}
-          disabled={state.isLoading}
-        />
+          {/* Editor Toolbar */}
+          <EditorToolbar
+            sourceFormat={state.sourceFormat}
+            targetFormat={state.targetFormat}
+            sourceKey={state.sourceKey}
+            targetKey={state.targetKey}
+            onSourceFormatChange={handleSourceFormatChange}
+            onTargetFormatChange={handleTargetFormatChange}
+            onSourceKeyChange={handleSourceKeyChange}
+            onTargetKeyChange={handleTargetKeyChange}
+            disabled={state.isLoading}
+          />
 
-        {/* Editor Split View */}
-        <EditorSplitView
-          inputValue={state.inputText}
-          outputValue={state.outputText}
-          onInputChange={handleInputChange}
-          isLoading={state.isLoading}
-          error={state.error}
-        />
-      </div>
-    </AppLayout>
+          {/* Editor Split View with Format Transition Animation */}
+          <FormatTransition
+            currentFormat={state.targetFormat}
+            transitionType="fade"
+            duration={0.5}
+          >
+            <EditorSplitView
+              inputValue={state.inputText}
+              outputValue={state.outputText}
+              onInputChange={handleInputChange}
+              isLoading={state.isLoading}
+              error={state.error}
+            />
+          </FormatTransition>
+        </div>
+      </AppLayout>
+    </AnimationCoordinator>
   );
 };

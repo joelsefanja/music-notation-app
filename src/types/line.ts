@@ -181,3 +181,25 @@ export const isAnnotationLine = (line: Line): line is AnnotationLine => {
 export const validateLine = (line: Line): boolean => {
   return line !== undefined;
 };
+
+// Export the actual line types that are missing
+export interface BaseLine {
+  type: string;
+  content: string;
+  metadata?: Record<string, any>;
+}
+
+export interface ChordLine extends BaseLine {
+  type: 'chord';
+  chords: Chord[];
+}
+
+export interface LyricLine extends BaseLine {
+  type: 'lyric';
+  lyrics: string;
+}
+
+export interface AnnotationLine extends BaseLine {
+  type: 'annotation';
+  annotation: string;
+}
