@@ -5,7 +5,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "dev": "next dev",
+    "start": "next start",
+    "build": "next build",
     "build:watch": "tsc --watch",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -68,7 +70,10 @@
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
     "crypto": "^1.0.1",
+    "next": "^15.4.4",
     "next-pwa": "^5.6.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "tailwindcss": "^4.1.11",
     "webpack-obfuscator": "^3.5.1"
   },
