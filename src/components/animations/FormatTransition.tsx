@@ -286,9 +286,6 @@ export const PresetFormatTransition: React.FC<{
     </FormatTransition>
   );
 };
-'use client';
-
-import React, { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NotationFormat } from '../../types';
 
