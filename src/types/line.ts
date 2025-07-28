@@ -219,7 +219,6 @@ export interface AnnotationLine extends BaseLine {
 
 export type { LineValidationResult };
 export { 
-  AnnotationFormat, 
   NashvilleQuality, 
   NotationFormat, 
   SectionType,
