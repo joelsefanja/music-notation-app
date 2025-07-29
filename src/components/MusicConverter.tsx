@@ -41,6 +41,7 @@ export const MusicConverter: React.FC = () => {
   });
 
   const [showOutput, setShowOutput] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   const debouncedInputText = useDebounce(state.inputText, 500);
 
   // Auto-detect format and key when input changes
@@ -107,7 +108,11 @@ export const MusicConverter: React.FC = () => {
         }));
 
         if (result.success && result.output) {
-          setShowOutput(true);
+          setIsAnimating(true);
+          setTimeout(() => {
+            setShowOutput(true);
+            setIsAnimating(false);
+          }, 300);
         }
       } catch (error) {
         setState(prev => ({
@@ -147,170 +152,208 @@ export const MusicConverter: React.FC = () => {
   const keys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'Cm', 'C#m', 'Dm', 'D#m', 'Em', 'Fm', 'F#m', 'Gm', 'G#m', 'Am', 'A#m', 'Bm'];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      {/* Header */}
-      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
-                Music Notation Converter
-              </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Real-time chord sheet conversion
-              </p>
-            </div>
-            
-            {/* Detection Status */}
-            {state.detectedFormat && (
-              <div className="flex flex-col items-end">
-                <div className="flex items-center space-x-2 text-xs">
-                  <div className="flex items-center px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-                    Detected: {formatDisplayNames[state.detectedFormat]}
-                  </div>
-                  <div className="text-gray-500 dark:text-gray-400">
-                    {Math.round(state.detectedConfidence * 100)}%
-                  </div>
-                </div>
-                {state.detectedKey && (
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Key: {state.detectedKey}
-                  </div>
-                )}
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-900">
+      <div className="relative z-10">
+        {/* Header */}
+        <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-b border-gray-200/30 dark:border-gray-700/30">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-center sm:text-left">
+                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-cyan-600 bg-clip-text text-transparent">
+                  Music Notation Converter
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400 mt-2 text-lg">
+                  Real-time chord sheet conversion & transposition
+                </p>
               </div>
-            )}
+              
+              {/* Detection Status */}
+              {state.detectedFormat && (
+                <div className="flex flex-col items-center sm:items-end mt-4 sm:mt-0 space-y-2">
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-4 py-2 rounded-full text-sm font-medium">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2 animate-pulse"></div>
+                      {formatDisplayNames[state.detectedFormat]}
+                    </div>
+                    <div className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-full text-sm font-medium">
+                      {Math.round(state.detectedConfidence * 100)}%
+                    </div>
+                  </div>
+                  {state.detectedKey && (
+                    <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-full text-sm font-medium">
+                      Key: {state.detectedKey}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        {/* Error Display */}
-        {state.error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <div className="flex items-start">
-              <svg className="w-5 h-5 text-red-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-              <div>
-                <h3 className="font-medium text-red-800 dark:text-red-300">Conversion Error</h3>
-                <p className="text-sm text-red-700 dark:text-red-400 mt-1">{state.error}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Main Content */}
-        <div className="relative">
-          {/* Input Section */}
-          <div className={`transition-all duration-700 ease-in-out ${
-            showOutput ? 'transform -translate-y-2 opacity-90' : 'transform translate-y-0 opacity-100'
-          }`}>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div className="p-6">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 space-y-3 md:space-y-0">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Enter Your Music
-                  </h2>
-                  
-                  {/* Controls */}
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <select
-                      value={state.targetFormat}
-                      onChange={(e) => setState(prev => ({ ...prev, targetFormat: e.target.value as NotationFormat }))}
-                      className="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:text-white"
-                    >
-                      {Object.entries(formatDisplayNames).map(([value, label]) => (
-                        <option key={value} value={value}>{label}</option>
-                      ))}
-                    </select>
-                    
-                    {state.sourceKey !== state.targetKey && (
-                      <select
-                        value={state.targetKey}
-                        onChange={(e) => setState(prev => ({ ...prev, targetKey: e.target.value }))}
-                        className="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 dark:text-white"
-                      >
-                        {keys.map(key => (
-                          <option key={key} value={key}>Key: {key}</option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Error Display */}
+          {state.error && (
+            <div className="mb-8 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-6 shadow-lg">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
                 </div>
-
-                <textarea
-                  value={state.inputText}
-                  onChange={(e) => handleInputChange(e.target.value)}
-                  placeholder="Paste your chord sheet here... (ChordPro, Guitar Tabs, OnSong, etc.)"
-                  className="w-full h-40 md:h-48 p-4 border border-gray-300 dark:border-gray-600 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 font-mono text-sm leading-relaxed"
-                />
-
-                {state.isConverting && (
-                  <div className="mt-4 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Converting...</span>
-                  </div>
-                )}
+                <div className="ml-4">
+                  <h3 className="text-lg font-semibold text-red-800 dark:text-red-300">Conversion Error</h3>
+                  <p className="text-red-700 dark:text-red-400 mt-1">{state.error}</p>
+                  <button
+                    onClick={() => setState(prev => ({ ...prev, error: null }))}
+                    className="mt-3 text-sm text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300 font-medium"
+                  >
+                    Dismiss
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Output Section */}
-          <div className={`mt-6 transition-all duration-700 ease-in-out ${
-            showOutput 
-              ? 'opacity-100 transform translate-y-0' 
-              : 'opacity-0 transform translate-y-4 pointer-events-none'
-          }`}>
-            {showOutput && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold text-white">
-                      Converted to {formatDisplayNames[state.targetFormat]}
+          {/* Main Content */}
+          <div className="space-y-8">
+            {/* Input Section */}
+            <div className={`transform transition-all duration-500 ease-out ${
+              showOutput ? 'scale-95 opacity-80' : 'scale-100 opacity-100'
+            }`}>
+              <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+                <div className="bg-gradient-to-r from-indigo-500 to-cyan-500 p-6">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                    <h2 className="text-xl font-bold text-white">
+                      Enter Your Music
                     </h2>
                     
-                    {/* Metadata Tags */}
-                    <div className="flex flex-wrap gap-2">
-                      {state.detectedFormat && (
-                        <span className="px-2 py-1 bg-white/20 text-white text-xs rounded-full">
-                          From: {formatDisplayNames[state.detectedFormat]}
-                        </span>
-                      )}
+                    {/* Controls */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="relative">
+                        <select
+                          value={state.targetFormat}
+                          onChange={(e) => setState(prev => ({ ...prev, targetFormat: e.target.value as NotationFormat }))}
+                          className="appearance-none bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder-white/70 rounded-xl px-4 py-3 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all"
+                        >
+                          {Object.entries(formatDisplayNames).map(([value, label]) => (
+                            <option key={value} value={value} className="text-gray-900">{label}</option>
+                          ))}
+                        </select>
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <svg className="w-5 h-5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </div>
+                      
                       {state.sourceKey !== state.targetKey && (
-                        <span className="px-2 py-1 bg-white/20 text-white text-xs rounded-full">
-                          {state.sourceKey} → {state.targetKey}
-                        </span>
-                      )}
-                      {state.detectedConfidence > 0 && (
-                        <span className="px-2 py-1 bg-white/20 text-white text-xs rounded-full">
-                          {Math.round(state.detectedConfidence * 100)}% confidence
-                        </span>
+                        <div className="relative">
+                          <select
+                            value={state.targetKey}
+                            onChange={(e) => setState(prev => ({ ...prev, targetKey: e.target.value }))}
+                            className="appearance-none bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder-white/70 rounded-xl px-4 py-3 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all"
+                          >
+                            {keys.map(key => (
+                              <option key={key} value={key} className="text-gray-900">Key: {key}</option>
+                            ))}
+                          </select>
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg className="w-5 h-5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
                 </div>
 
-                <div className="p-6">
+                <div className="p-8">
                   <div className="relative">
-                    <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-4 rounded-lg overflow-x-auto">
-                      {state.outputText}
-                    </pre>
+                    <textarea
+                      value={state.inputText}
+                      onChange={(e) => handleInputChange(e.target.value)}
+                      placeholder="Paste your chord sheet here... 
+
+Try formats like:
+• ChordPro: {title: Song Title} [C]Hello [F]world
+• Guitar Tabs: [Verse] C F G Am  
+• OnSong: Title: Song | C-F-G-Am"
+                      className="w-full h-64 sm:h-80 p-6 bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-2xl resize-none focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 dark:focus:border-indigo-400 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 font-mono text-sm leading-relaxed transition-all"
+                    />
                     
-                    {/* Copy Button */}
-                    <button
-                      onClick={() => navigator.clipboard.writeText(state.outputText)}
-                      className="absolute top-2 right-2 p-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-500 transition-colors"
-                      title="Copy to clipboard"
-                    >
-                      <svg className="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                    </button>
+                    {state.isConverting && (
+                      <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                        <div className="flex items-center space-x-3">
+                          <div className="animate-spin rounded-full h-8 w-8 border-3 border-indigo-500 border-t-transparent"></div>
+                          <span className="text-indigo-600 dark:text-indigo-400 font-medium">Converting...</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+
+            {/* Output Section */}
+            <div className={`transform transition-all duration-700 ease-out ${
+              showOutput 
+                ? 'opacity-100 translate-y-0 scale-100' 
+                : 'opacity-0 translate-y-8 scale-95 pointer-events-none'
+            }`}>
+              {showOutput && (
+                <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+                  <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-6">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+                      <h2 className="text-xl font-bold text-white">
+                        ✨ Converted to {formatDisplayNames[state.targetFormat]}
+                      </h2>
+                      
+                      {/* Metadata Tags */}
+                      <div className="flex flex-wrap gap-2">
+                        {state.detectedFormat && (
+                          <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-medium px-3 py-1.5 rounded-full">
+                            From: {formatDisplayNames[state.detectedFormat]}
+                          </span>
+                        )}
+                        {state.sourceKey !== state.targetKey && (
+                          <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-medium px-3 py-1.5 rounded-full">
+                            {state.sourceKey} → {state.targetKey}
+                          </span>
+                        )}
+                        {state.detectedConfidence > 0 && (
+                          <span className="bg-white/20 backdrop-blur-sm text-white text-xs font-medium px-3 py-1.5 rounded-full">
+                            {Math.round(state.detectedConfidence * 100)}% confidence
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-8">
+                    <div className="relative group">
+                      <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-900 p-6 rounded-2xl overflow-x-auto border-2 border-gray-200 dark:border-gray-700">
+                        {state.outputText}
+                      </pre>
+                      
+                      {/* Copy Button */}
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(state.outputText);
+                          // Could add toast notification here
+                        }}
+                        className="absolute top-4 right-4 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 p-3 rounded-xl shadow-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 transition-all transform hover:scale-105 opacity-0 group-hover:opacity-100"
+                        title="Copy to clipboard"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
