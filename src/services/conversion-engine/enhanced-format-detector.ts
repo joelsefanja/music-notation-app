@@ -198,23 +198,33 @@ export class EnhancedFormatDetector implements IFormatDetector {
     // Guitar Tabs patterns
     this.formatPatterns.set(NotationFormat.GUITAR_TABS, [
       {
-        pattern: /^\[(?:Intro|Verse|Chorus|Bridge|Outro|Solo|Pre-Chorus|Tag|Coda|Instrumental|Refrain|Break|Interlude)(?:\s+\d+)?\]$/mi,
+        pattern: /^\[(?:Verse|Chorus|Bridge|Intro|Outro|Solo|Pre-Chorus|Tag|Coda|Instrumental|Refrain|Break|Interlude)(?:\s+\d+)?\]$/mi,
         weight: 0.95,
         description: 'Guitar tabs section headers in brackets'
       },
       {
-        pattern: /^[eEbBgGdDaA][\|\-\d\s]+$/m,
+        pattern: /^\s*[A-G][#b]?\s*$/m,
+        weight: 0.7,
+        description: 'Single chord line above lyrics'
+      },
+      {
+        pattern: /^[A-G][#b]?(?:\s+[A-G][#b]?)*\s*$/m,
         weight: 0.8,
+        description: 'Multiple chords line'
+      },
+      {
+        pattern: /^[eEbBgGdDaA][\|\-\d\s]+$/m,
+        weight: 0.6,
         description: 'Guitar tab string notation'
       },
       {
         pattern: /^\s*\d+[\-\d\s]*\d+\s*$/m,
-        weight: 0.6,
+        weight: 0.5,
         description: 'Guitar tab fret numbers'
       },
       {
         pattern: /[h^p~\/\\]/g,
-        weight: 0.4,
+        weight: 0.3,
         description: 'Guitar tab technique symbols'
       }
     ]);

@@ -2,8 +2,8 @@ import { IRenderer, IRendererFactory, NotationFormat } from './core/renderer.int
 import { ChordProRenderer } from './formats/chordpro-renderer';
 import { OnSongRenderer } from './formats/onsong-renderer';
 import { SongbookRenderer } from './formats/songbook-renderer';
-import { GuitarTabsRenderer } from './formats/guitar-tabs-renderer';
 import { NashvilleRenderer } from './formats/nashville-renderer';
+import { GuitarTabsRenderer } from './formats/guitar-tabs-renderer';
 
 /**
  * Factory for creating format-specific renderers
@@ -43,7 +43,7 @@ export class RendererFactory implements IRendererFactory {
      */
     public createRenderer(format: NotationFormat): IRenderer {
         const renderer = this.renderers.get(format);
-        
+
         if (!renderer) {
             throw new Error(`No renderer available for format: ${format}`);
         }

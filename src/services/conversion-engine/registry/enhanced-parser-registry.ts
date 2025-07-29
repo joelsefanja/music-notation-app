@@ -9,6 +9,12 @@ import {
   IFormatValidator 
 } from '../../../types/interfaces/core-interfaces';
 import { NotationFormat } from '../../../types/line';
+import { ChordProParser } from '../format-parsers/formats/chordpro-parser';
+import { OnSongParser } from '../format-parsers/formats/onsong-parser';
+import { SongbookParser } from '../format-parsers/formats/songbook-parser';
+import { NashvilleParser } from '../format-parsers/formats/nashville-parser';
+import { PlanningCenterParser } from '../format-parsers/formats/planning-center-parser';
+import { GuitarTabsParser } from '../format-parsers/formats/guitar-tabs-parser';
 
 /**
  * Parser registration information
@@ -187,7 +193,7 @@ export class EnhancedParserRegistry implements IParserRegistry {
     const directFormat = Object.values(NotationFormat).find(
       format => format.toLowerCase() === formatOrAlias.toLowerCase()
     );
-    
+
     if (directFormat) {
       return directFormat;
     }
@@ -235,7 +241,7 @@ export class EnhancedParserRegistry implements IParserRegistry {
    */
   getParsersByPriority(): Array<{ format: NotationFormat; parser: IParser; priority: number }> {
     const registrations = Array.from(this.parsers.entries());
-    
+
     return registrations
       .sort(([, a], [, b]) => b.priority - a.priority)
       .map(([format, registration]) => ({
@@ -266,10 +272,10 @@ export class EnhancedParserRegistry implements IParserRegistry {
         if (registration.parser.isValid(input)) {
           // Calculate confidence based on validation and priority
           let confidence = 0.5; // Base confidence for valid input
-          
+
           // Add priority bonus
           confidence += (registration.priority / 100);
-          
+
           // Add format-specific confidence (this would be more sophisticated in practice)
           if (registration.validator) {
             const validationResult = registration.validator.validate(input);
@@ -302,10 +308,10 @@ export class EnhancedParserRegistry implements IParserRegistry {
     const totalParsers = this.parsers.size;
     const totalAliases = this.aliases.size;
     const totalCapabilities = this.capabilities.size;
-    
+
     const formatDistribution: Record<string, number> = {};
     let totalPriority = 0;
-    
+
     for (const [format, registration] of this.parsers) {
       formatDistribution[format] = 1;
       totalPriority += registration.priority;
@@ -369,22 +375,22 @@ export class EnhancedParserRegistry implements IParserRegistry {
    */
   clone(): EnhancedParserRegistry {
     const clone = new EnhancedParserRegistry();
-    
+
     // Copy parsers
     for (const [format, registration] of this.parsers) {
       clone.parsers.set(format, { ...registration });
     }
-    
+
     // Copy aliases
     for (const [alias, format] of this.aliases) {
       clone.aliases.set(alias, format);
     }
-    
+
     // Copy capabilities
     for (const [capability, formats] of this.capabilities) {
       clone.capabilities.set(capability, [...formats]);
     }
-    
+
     return clone;
   }
 
@@ -413,5 +419,15 @@ export class EnhancedParserRegistry implements IParserRegistry {
         }
       }
     }
+  }
+
+  // Register built-in parsers
+  registerBuiltInParsers(): void {
+    this.registerParser(NotationFormat.CHORDPRO, new ChordProParser());
+    this.registerParser(NotationFormat.ONSONG, new OnSongParser());
+    this.registerParser(NotationFormat.SONGBOOK, new SongbookParser());
+    this.registerParser(NotationFormat.NASHVILLE, new NashvilleParser());
+    this.registerParser(NotationFormat.PCO, new PlanningCenterParser());
+    this.registerParser(NotationFormat.GUITAR_TABS, new GuitarTabsParser());
   }
 }
