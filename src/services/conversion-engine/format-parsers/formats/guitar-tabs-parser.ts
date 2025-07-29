@@ -24,10 +24,15 @@ export class GuitarTabsParser extends BaseParser {
   }
 
   protected parseContentLine(line: string, lineNumber: number): TextLine | ChordLine {
+    const trimmedLine = line.trim();
+    
     // Check if this is a chord line (contains only chords and whitespace)
     const chordPattern = /^[A-G][#b]?(?:maj|min|m|dim|aug|\+|°|sus[24]?|add\d+|\d+)*(?:\/[A-G][#b]?)?(?:\s+[A-G][#b]?(?:maj|min|m|dim|aug|\+|°|sus[24]?|add\d+|\d+)*(?:\/[A-G][#b]?)?)*\s*$/;
     
-    if (chordPattern.test(line.trim())) {
+    // Also check for single chord lines
+    const singleChordPattern = /^[A-G][#b]?(?:maj|min|m|dim|aug|\+|°|sus[24]?|add\d+|\d+)*(?:\/[A-G][#b]?)?$/;
+    
+    if (chordPattern.test(trimmedLine) || singleChordPattern.test(trimmedLine)) {
       // Parse as chord line
       const chords: Chord[] = [];
       const chordMatches = line.match(/[A-G][#b]?(?:maj|min|m|dim|aug|\+|°|sus[24]?|add\d+|\d+)*(?:\/[A-G][#b]?)?/g) || [];

@@ -16,7 +16,8 @@ export class GuitarTabsValidator implements FormatValidator {
     if (text.trim().length === 0) return false;
     
     // Look for section headers [Intro] [Verse] [Chorus] - this is the primary indicator
-    const hasSectionHeaders = /^\[(?:Intro|Verse|Chorus|Bridge|Outro|Solo|Pre-Chorus|Tag|Coda|Instrumental|Refrain|Break|Interlude)(?:\s+\d+)?\]$/mi.test(text);
+    const hasSectionHeaders = /^\[(?:Intro|Verse|Chorus|Bridge|Outro|Solo|Pre-Chorus|Tag|Coda|Instrumental|Refrain|Break|Interlude)(?:\s+\d+)?\]$/mi.test(text) ||
+      /^\[Verse\s+\d+\]$/mi.test(text) || /^\[Chorus\s+\d+\]$/mi.test(text);
     
     // Look for guitar tab lines (strings with fret numbers)
     const hasTabLines = /^[eBGDAE][\|\-\d\s]+$/m.test(text);

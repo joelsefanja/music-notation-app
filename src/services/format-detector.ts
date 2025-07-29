@@ -45,16 +45,33 @@ export class FormatDetector {
       }
     }
 
-    // Guitar tabs detection
-    const tabRegex = /[-\d]+[-\d\s]+[-\d]+/g;
-    const tabMatches = text.match(tabRegex);
-    if (tabMatches) {
-      const confidence = Math.min(tabMatches.length * 0.4, 1);
-      if (confidence > maxConfidence) {
-        maxConfidence = confidence;
-        detectedFormat = 'guitar_tabs';
-        indicators.push('Guitar tab notation found');
+    // Guitar tabs detection - section headers and chord patterns
+    const sectionHeaderRegex = /^\[(?:Intro|Verse|Chorus|Bridge|Outro|Solo|Pre-Chorus|Tag|Coda|Instrumental|Refrain|Break|Interlude)(?:\s+\d+)?\]/mi;
+    const chordLineRegex = /^[A-G][#b]?(?:maj|min|m|dim|aug|\+|°|sus[24]?|add\d+|\d+)*(?:\/[A-G][#b]?)?(?:\s+[A-G][#b]?(?:maj|min|m|dim|aug|\+|°|sus[24]?|add\d+|\d+)*(?:\/[A-G][#b]?)?)*\s*$/m;
+    
+    let guitarTabsScore = 0;
+    
+    if (sectionHeaderRegex.test(text)) {
+      guitarTabsScore += 0.6;
+      indicators.push('section headers in brackets');
+    }
+    
+    const lines = text.split('\n');
+    let chordLineCount = 0;
+    for (const line of lines) {
+      if (chordLineRegex.test(line.trim()) || /^[A-G][#b]?(?:maj|min|m|dim|aug|\+|°|sus[24]?|add\d+|\d+)*(?:\/[A-G][#b]?)?$/.test(line.trim())) {
+        chordLineCount++;
       }
+    }
+    
+    if (chordLineCount > 0) {
+      guitarTabsScore += Math.min(chordLineCount * 0.2, 0.4);
+      indicators.push('chord lines detected');
+    }
+    
+    if (guitarTabsScore > maxConfidence) {
+      maxConfidence = guitarTabsScore;
+      detectedFormat = 'guitar_tabs';
     }
 
     return {
