@@ -90,3 +90,13 @@ export function validateChordExtension(extension: any): extension is ChordExtens
         typeof extension.value === 'string' &&
         typeof extension.position === 'number';
 }
+
+export enum ChordType {
+    MAJOR = 'major',
+    MINOR = 'minor',
+    DIMINISHED = 'diminished',
+    AUGMENTED = 'augmented',
+    DOMINANT = 'dominant',
+    SUSPENDED = 'suspended',
+    EXTENDED = 'extended'
+}
