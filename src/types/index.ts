@@ -19,11 +19,21 @@ export {
   SectionType
 } from './format';
 
-export {
+export type {
   BaseLine,
   ChordLine,
   LyricLine,
   AnnotationLine,
+  Line,
+  TextLine,
+  EmptyLine,
+  Chord,
+  ChordPlacement,
+  NashvilleChord,
+  RhythmicSymbol
+} from './line';
+
+export {
   isChordLine,
   isLyricLine,
   isTextLine,
