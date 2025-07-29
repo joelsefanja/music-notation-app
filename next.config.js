@@ -12,7 +12,9 @@ module.exports = withPWA({
   },
   allowedDevOrigins: [
     'e4c85ae4-4187-40dc-bca8-eb7bfb435574-00-2sclfa3cdiby7.kirk.repl.co',
+    'bb3c6b26-dd84-4da3-b27c-9c3a33c643d2-00-3djiyn1caxynk.spock.replit.dev',
     '.repl.co',
+    '.replit.dev',
     '0.0.0.0:3000'
   ],
   webpack: (config, { isServer }) => {

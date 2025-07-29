@@ -184,51 +184,8 @@ export const validateLine = (line: Line): boolean => {
   return line !== undefined;
 };
 
-// Base line interface
-export interface BaseLine {
-  type: string;
-  lineNumber?: number;
+// Type for validation results
+export interface LineValidationResult {
+  isValid: boolean;
+  errors?: string[];
 }
-
-// Chord line interface
-export interface ChordLine extends BaseLine {
-  type: 'chord';
-  chords: Array<{
-    chord: string;
-    position: number;
-  }>;
-  text?: string;
-}
-
-// Lyric line interface
-export interface LyricLine extends BaseLine {
-  type: 'lyric';
-  text: string;
-  chords?: Array<{
-    chord: string;
-    position: number;
-  }>;
-}
-
-// Annotation line interface
-export interface AnnotationLine extends BaseLine {
-  type: 'annotation';
-  value: string;
-  annotationType: 'section' | 'comment' | 'directive';
-}
-
-export type { LineValidationResult };
-export { 
-  NashvilleQuality, 
-  NotationFormat, 
-  SectionType,
-  isAnnotationLine,
-  isChordLine,
-  isEmptyLine,
-  isLyricLine,
-  isTextLine,
-  validateLine
-};
-
-// Export the new line types
-export type { BaseLine, ChordLine, LyricLine, AnnotationLine };
