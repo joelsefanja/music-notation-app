@@ -52,8 +52,8 @@ export class FormatDetector {
     let guitarTabsScore = 0;
     
     if (sectionHeaderRegex.test(text)) {
-      guitarTabsScore += 0.6;
-      indicators.push('section headers in brackets');
+      guitarTabsScore += 0.8; // Increased from 0.6 - section headers are very distinctive for Guitar Tabs
+      indicators.push('section headers in brackets found');
     }
     
     const lines = text.split('\n');
@@ -65,8 +65,14 @@ export class FormatDetector {
     }
     
     if (chordLineCount > 0) {
-      guitarTabsScore += Math.min(chordLineCount * 0.2, 0.4);
-      indicators.push('chord lines detected');
+      guitarTabsScore += Math.min(chordLineCount * 0.15, 0.3);
+      indicators.push('guitar chord lines detected');
+    }
+    
+    // Additional boost if we have both section headers AND chord lines
+    if (sectionHeaderRegex.test(text) && chordLineCount > 0) {
+      guitarTabsScore = Math.min(guitarTabsScore + 0.1, 0.95);
+      indicators.push('section headers with chord progressions');
     }
     
     if (guitarTabsScore > maxConfidence) {
