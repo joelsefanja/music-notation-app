@@ -1,0 +1,322 @@
+
+MIGRATION_GUIDE.md
+Migration Guide: SOLID Architecture Refactoring
+Overview
+This guide helps you migrate from the legacy conversion engine to the new SOLID-principles-based architecture. The refactoring introduces significant improvements in maintainability, testability, and extensibility while maintaining backward compatibility where possible.
+
+🚨 Breaking Changes
+1. Dependency Injection Required
+Before:
+
+import { ConversionEngine } from './conversion-engine';
+const engine = new ConversionEngine();
+const result = await engine.convert(input, fromFormat, toFormat);
+After:
+
+import { createConfiguredContainer } from './services/dependency-injection/container-setup';
+import { DI_TOKENS } from './services/dependency-injection/dependency-container';
+import { IConversionEngine } from './types/interfaces/core-interfaces';
+const container = createConfiguredContainer();
+const engine = container.resolve<IConversionEngine>(DI_TOKENS.CONVERSION_ENGINE);
+const result = await engine.convert({
+  input,
+  targetFormat,
+  sourceFormat: fromFormat
+});
+2. Interface-Based Programming
+Before:
+
+import { ChordService } from './chord-service';
+const chordService = new ChordService();
+const chord = chordService.parseChord('Cmaj7');
+After:
+
+import { IChordFactory } from './types/interfaces/core-interfaces';
+const chordFactory = container.resolve<IChordFactory>(DI_TOKENS.CHORD_FACTORY);
+const chord = chordFactory.createChord('Cmaj7');
+3. Enhanced Error Handling
+Before:
+
+try {
+  const result = await engine.convert(input);
+} catch (error) {
+  console.error('Conversion failed:', error);
+}
+After:
+
+const result = await engine.convert(request);
+if (!result.success) {
+  // Errors are now part of the result object
+  console.error('Conversion errors:', result.errors);
+  // Warnings are also available
+  console.warn('Conversion warnings:', result.warnings);
+}
+4. Event-Driven Architecture
+Before:
+
+// No events were available
+After:
+
+const eventManager = container.resolve<IEventManager>(DI_TOKENS.EVENT_MANAGER);
+eventManager.subscribe('ConversionStarted', (event) => {
+  console.log('Conversion started:', event.requestId);
+});
+eventManager.subscribe('ConversionCompleted', (event) => {
+  console.log('Conversion completed:', event.output);
+});
+📦 New Features
+1. Builder Pattern for Complex Objects
+// Create complex chords using Builder pattern
+const chord = chordFactory.createChordBuilder()
+  .setRoot('F')
+  .setQuality(ChordQuality.MINOR)
+  .addExtensionByValue('dom', '7')
+  .setBassNote('A')
+  .setOriginalNotation('Fm7/A')
+  .build();
+2. Command Pattern for Undo/Redo
+const keyTransposer = container.resolve<IKeyTransposer>(DI_TOKENS.KEY_TRANSPOSER);
+const commandManager = container.resolve<ITransposeCommandManager>(DI_TOKENS.TRANSPOSE_COMMAND_MANAGER);
+// Create and execute transpose command
+const command = keyTransposer.createTransposeCommand(songModel, 'C', 'G');
+await commandManager.executeCommand(command);
+// Undo the transposition
+await commandManager.undo();
+3. Enhanced Storage System
+const storageService = container.resolve<IStorageService>(DI_TOKENS.STORAGE_SERVICE);
+// Save conversion results
+await storageService.saveConversionResult(result, 'my-conversion');
+// Load conversion history
+const history = await storageService.loadConversionHistory();
+4. Nashville Number System Builder
+const nashvilleDirector = container.resolve<INashvilleNotationDirector>(DI_TOKENS.NASHVILLE_DIRECTOR);
+// Build common progressions
+const progression = nashvilleDirector.buildBasicProgression('C'); // I-V-vi-IV
+const jazzProgression = nashvilleDirector.buildJazzProgression('F'); // ii-V-I
+🔄 Step-by-Step Migration
+Step 1: Update Dependencies
+npm install reflect-metadata  # Required for dependency injection decorators
+Step 2: Initialize Container
+Create a container initialization file:
+
+// src/container.ts
+import { createConfiguredContainer } from './services/dependency-injection/container-setup';
+export const container = createConfiguredContainer({
+  storageType: 'filesystem', // or 'memory' for testing
+  errorRecoveryLevel: 'moderate' // 'strict', 'moderate', or 'permissive'
+});
+Step 3: Update Service Usage
+Replace direct instantiation with container resolution:
+
+// Before
+import { ChordService } from './chord-service';
+const chordService = new ChordService();
+// After
+import { container } from './container';
+import { DI_TOKENS } from './services/dependency-injection/dependency-container';
+import { IChordFactory } from './types/interfaces/core-interfaces';
+const chordFactory = container.resolve<IChordFactory>(DI_TOKENS.CHORD_FACTORY);
+Step 4: Update Error Handling
+// Before
+try {
+  const result = await conversionEngine.convert(input, 'onsong', 'chordpro');
+  console.log(result);
+} catch (error) {
+  console.error(error);
+}
+// After
+const result = await conversionEngine.convert({
+  input,
+  sourceFormat: NotationFormat.ONSONG,
+  targetFormat: NotationFormat.CHORDPRO
+});
+if (result.success) {
+  console.log('Conversion successful:', result.output);
+} else {
+  console.error('Conversion failed:', result.errors);
+  console.warn('Warnings:', result.warnings);
+}
+Step 5: Add Event Handling (Optional)
+import { setupEventListeners } from './services/dependency-injection/container-setup';
+// Set up default event listeners
+setupEventListeners(container);
+// Or add custom event listeners
+const eventManager = container.resolve<IEventManager>(DI_TOKENS.EVENT_MANAGER);
+eventManager.subscribe('ConversionCompleted', (event) => {
+  // Custom handling
+  analytics.track('conversion_completed', {
+    requestId: event.requestId,
+    outputLength: event.output.length
+  });
+});
+🧪 Testing Migration
+Update Test Setup
+// Before
+import { ConversionEngine } from '../conversion-engine';
+describe('Conversion Tests', () => {
+  let engine: ConversionEngine;
+  
+  beforeEach(() => {
+    engine = new ConversionEngine();
+  });
+});
+// After
+import { createTestContainer } from '../services/dependency-injection/container-setup';
+import { DI_TOKENS } from '../services/dependency-injection/dependency-container';
+import { IConversionEngine } from '../types/interfaces/core-interfaces';
+describe('Conversion Tests', () => {
+  let container: any;
+  let engine: IConversionEngine;
+  
+  beforeEach(() => {
+    container = createTestContainer();
+    engine = container.resolve<IConversionEngine>(DI_TOKENS.CONVERSION_ENGINE);
+  });
+  
+  afterEach(() => {
+    container.dispose();
+  });
+});
+Mock Dependencies
+// Create mock implementations for testing
+const mockChordFactory = {
+  createChord: jest.fn(),
+  isValidChord: jest.fn(),
+  createChordBuilder: jest.fn()
+};
+container.registerValue(DI_TOKENS.CHORD_FACTORY, mockChordFactory);
+🔧 Configuration Options
+Container Configuration
+const container = createConfiguredContainer({
+  // Storage backend
+  storageType: 'filesystem', // 'filesystem' | 'memory' | 'database'
+  storagePath: './data', // Only for filesystem storage
+  
+  // Error recovery level
+  errorRecoveryLevel: 'moderate', // 'strict' | 'moderate' | 'permissive'
+  
+  // Additional options can be added here
+});
+Custom Service Registration
+// Register custom implementations
+container.registerSingleton('CustomService', () => new MyCustomService());
+// Register with dependencies
+container.registerClass('MyService', MyService, ['CustomService'], true);
+📊 Performance Considerations
+Memory Management
+// Always dispose of containers when done
+const container = createConfiguredContainer();
+// Use the container...
+// Clean up
+container.dispose();
+Singleton vs Transient Services
+Most services are registered as singletons for performance. If you need transient behavior:
+
+container.register('TransientService', () => new MyService());
+🐛 Common Issues and Solutions
+Issue 1: "No registration found for token"
+Problem: Service not registered in container.
+
+Solution: Ensure the service is registered in container-setup.ts or register it manually:
+
+container.registerSingleton('MyService', () => new MyService());
+Issue 2: Circular Dependencies
+Problem: Services depend on each other circularly.
+
+Solution: Use factory functions or lazy initialization:
+
+container.register('ServiceA', () => {
+  const serviceB = container.resolve('ServiceB');
+  return new ServiceA(serviceB);
+});
+Issue 3: Interface Compatibility
+Problem: Existing code expects concrete classes.
+
+Solution: Create adapter classes or update code to use interfaces:
+
+// Adapter approach
+class LegacyChordServiceAdapter {
+  constructor(private chordFactory: IChordFactory) {}
+  
+  parseChord(chordString: string) {
+    return this.chordFactory.createChord(chordString);
+  }
+}
+🔮 Future Compatibility
+Planned Features
+Renderer System: Similar to parser registry for output formatting
+Plugin Architecture: Dynamic loading of format parsers
+Advanced Caching: Intelligent caching of conversion results
+Streaming API: Support for large file processing
+Deprecation Timeline
+v2.0: Legacy API marked as deprecated but still functional
+v2.1: Compatibility layer with warnings
+v3.0: Legacy API removed
+📚 Additional Resources
+SOLID Principles Documentation
+API Reference
+Architecture Decision Records
+Performance Benchmarks
+🆘 Getting Help
+If you encounter issues during migration:
+
+Check the Common Issues section
+Review the test examples for usage patterns
+Run the example code
+Create an issue with your specific migration problem
+✅ Migration Checklist
+ Update dependencies and imports
+ Initialize dependency injection container
+ Replace direct instantiation with container resolution
+ Update error handling to use result objects
+ Add event handling if needed
+ Update tests to use new architecture
+ Run performance benchmarks to verify improvements
+ Update documentation and team training materials
+Note: This migration guide covers the major changes. For specific use cases or advanced scenarios, refer to the detailed documentation and examples provided in the codebase.
+
+Configure Repl
+Configure your App
+Your code was successfully imported from GitHub. We've created a .replit file, which configures your App's behavior. Learn more about .replit files.
+
+To get started, verify our recommended platform dependencies and commands. If you're still deciding, try asking AI.
+
+Modules
+Modules combine support for programming languages, formatters, and packagers.
+Node.js
+24.4.0
+Node.js packager (npm, yarn, pnpm, bun)
+Prettier
+3.5.3
+TypeScript Language Server
+4.3.3
+CSS Language Server
+HTML Language Server
+TypeScript Language Server
+4.3.3
+Commands
+Run command
+npm run dev
+Use either a dev server or start command.
+Not sure what to use or running multiple apps?
+Shell
+Enable "Accessible Terminal" in Workspace Settings to use a screen reader with the shell.
+Console
+Port :3000 opened on
+Shell
+Enable "Accessible Terminal" in Workspace Settings to use a screen reader with the shell.
+Problems
+View problems in your code detected by static analysis tools like type checkers and linters
+No problems found in your workspace 🎉
+Workflows
+Search for a workflow...
+Shell
+Enable "Accessible Terminal" in Workspace Settings to use a screen reader with the shell.
+Assistant
+Chats
+Archived
+Tailwind CSS Configuration Troubleshooting
+3 minutes ago
+muziek app ui ux verbeteren key formaat wisselen
+45 minutes ago
+Ik had een mooie pagina gemaakt een single page die ui ux goed haf zodat een user muziek van formaat en key kan wisselen. Maar als ik het plak zie ik niet dat het automatisch wordt omgewisseld. Ik wil direct bij het wisselen van key of formaat dat het met een animatie ook gebeurt. Ik zie de ronde. Hoeken en neutrale kleuren en groot genoege ui nog niet voorbij komen je moet zooveel mogelijk scherm gebruiken voor het invul veld waar ook de omgezette tekst verschijnt door oude tekst te vervangen. Ik heb ook aantal problemen doe maar npm run test. Fix ook de cors dat ie met alle replit domeinen werkt niet specifiek voor dit account id. Het moet dus overzichtelijk professionele app zijn voor het makkelijk omzetten van liederen en akkoorden en de key. En dat is allemaal optioneel. Kam ook zijn dat ik gewoon origineel wil bekijken. Maak ook knoppen en veeleisende tekst en invull en virus veld groot genoeg. Gebruik zoveel mogelijk van het scherm het moet een professionele wa zijn.
