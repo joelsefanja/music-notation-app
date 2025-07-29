@@ -1,101 +1,141 @@
-import { NotationFormat } from '../../types';
 
-export interface NashvilleConversionOptions {
-  includeMetadata?: boolean;
-  preserveFormatting?: boolean;
+import { Chord, ChordType } from '../../types/chord';
+import { Section } from '../../types/section';
+import { Line, LineType } from '../../types/line';
+import { ChordSheet } from '../../types/chordsheet';
+import { ConversionResult } from '../../types/conversion-result';
+import { ConversionError } from '../../types/conversion-error';
+
+interface NashvilleChordMapping {
+  [key: string]: string;
 }
 
-export interface NashvilleConversionResult {
-  output: string;
-  success: boolean;
-  errors?: Array<{ message: string; line?: number }>;
-}
-
-export interface NashvilleConverterInterface {
-  convert(input: string, options?: NashvilleConversionOptions): NashvilleConversionResult;
-  convertChordToNashville(chord: string, key?: string): string;
-  convertNashvilleToChord(nashville: string, key?: string): string;
-}
-
-export class NashvilleConverterImpl implements NashvilleConverterInterface {
-  private keyMap: Record<string, number> = {
-    'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4,
-    'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9,
-    'A#': 10, 'Bb': 10, 'B': 11
+export class NashvilleConverter {
+  private readonly chordMappings: NashvilleChordMapping = {
+    'C': '1',
+    'Dm': '2m',
+    'Em': '3m', 
+    'F': '4',
+    'G': '5',
+    'Am': '6m',
+    'Bdim': '7°',
+    'C#': '1#',
+    'D#m': '2#m',
+    'F#': '4#',
+    'G#': '5#',
+    'A#m': '6#m',
+    'Db': '1b',
+    'Eb': '3b',
+    'Gb': '4b',
+    'Ab': '6b',
+    'Bb': '7b'
   };
 
-  private numberToChordMap: Record<number, string> = {
-    0: 'C', 1: 'C#', 2: 'D', 3: 'D#', 4: 'E', 5: 'F',
-    6: 'F#', 7: 'G', 8: 'G#', 9: 'A', 10: 'A#', 11: 'B'
-  };
+  /**
+   * Convert chord to Nashville notation
+   */
+  convertChord(chord: Chord): string {
+    const baseChord = `${chord.root}${chord.type === ChordType.MINOR ? 'm' : ''}`;
+    return this.chordMappings[baseChord] || chord.root;
+  }
 
-  convert(input: string, options: NashvilleConversionOptions = {}): NashvilleConversionResult {
+  /**
+   * Convert chord sheet to Nashville notation
+   */
+  convertToNashville(chordSheet: ChordSheet): ConversionResult {
     try {
-      const lines = input.split('\n');
-      const processedLines: string[] = [];
+      const convertedSections: Section[] = chordSheet.sections.map(section => ({
+        ...section,
+        lines: section.lines.map(line => this.convertLine(line))
+      }));
 
-      for (const line of lines) {
-        if (this.isChordLine(line)) {
-          const convertedLine = this.convertChordLine(line);
-          processedLines.push(convertedLine);
-        } else {
-          processedLines.push(line);
-        }
-      }
+      const convertedChordSheet: ChordSheet = {
+        ...chordSheet,
+        sections: convertedSections
+      };
 
       return {
-        output: processedLines.join('\n'),
-        success: true
+        success: true,
+        output: this.formatOutput(convertedChordSheet),
+        metadata: chordSheet.metadata,
+        errors: []
       };
     } catch (error) {
       return {
-        output: input,
         success: false,
-        errors: [{ message: error instanceof Error ? error.message : 'Conversion failed' }]
+        output: '',
+        metadata: chordSheet.metadata,
+        errors: [{
+          type: 'conversion',
+          message: error instanceof Error ? error.message : 'Nashville conversion failed',
+          line: 0,
+          severity: 'error'
+        } as ConversionError]
       };
     }
   }
 
-  convertChordToNashville(chord: string, key: string = 'C'): string {
-    const chordRoot = chord.match(/^[A-G][#b]?/)?.[0] || '';
-    const chordSuffix = chord.replace(chordRoot, '');
-
-    const rootNumber = this.keyMap[chordRoot];
-    const keyNumber = this.keyMap[key];
-
-    if (rootNumber === undefined || keyNumber === undefined) {
-      return chord;
+  private convertLine(line: Line): Line {
+    if (line.type === LineType.CHORD_LYRIC && line.chords) {
+      return {
+        ...line,
+        chords: line.chords.map(chord => ({
+          ...chord,
+          chord: this.convertChord(chord.chord)
+        }))
+      };
     }
-
-    let nashvilleNumber = ((rootNumber - keyNumber + 12) % 12) + 1;
-    if (nashvilleNumber === 0) nashvilleNumber = 12;
-
-    return `${nashvilleNumber}${chordSuffix}`;
+    return line;
   }
 
-  convertNashvilleToChord(nashville: string, key: string = 'C'): string {
-    const numberMatch = nashville.match(/^(\d+)/);
-    if (!numberMatch) return nashville;
+  private formatOutput(chordSheet: ChordSheet): string {
+    let output = '';
+    
+    if (chordSheet.metadata.title) {
+      output += `Title: ${chordSheet.metadata.title}\n`;
+    }
+    if (chordSheet.metadata.artist) {
+      output += `Artist: ${chordSheet.metadata.artist}\n`;
+    }
+    if (chordSheet.metadata.key) {
+      output += `Key: ${chordSheet.metadata.key}\n`;
+    }
+    
+    output += '\n';
 
-    const number = parseInt(numberMatch[1]);
-    const suffix = nashville.replace(numberMatch[0], '');
-
-    const keyNumber = this.keyMap[key];
-    if (keyNumber === undefined) return nashville;
-
-    const chordNumber = (keyNumber + number - 1) % 12;
-    const chordRoot = this.numberToChordMap[chordNumber];
-
-    return `${chordRoot}${suffix}`;
-  }
-
-  private isChordLine(line: string): boolean {
-    return /^[A-G][#b]?(?:maj|min|m|dim|aug|\+|°|sus[24]?|add\d+|\d+)*/.test(line.trim());
-  }
-
-  private convertChordLine(line: string): string {
-    return line.replace(/[A-G][#b]?(?:maj|min|m|dim|aug|\+|°|sus[24]?|add\d+|\d+)*/g, (chord) => {
-      return this.convertChordToNashville(chord);
+    chordSheet.sections.forEach(section => {
+      if (section.type !== 'default') {
+        output += `[${section.type}]\n`;
+      }
+      
+      section.lines.forEach(line => {
+        if (line.type === LineType.CHORD_LYRIC && line.chords && line.chords.length > 0) {
+          // Create chord line
+          let chordLine = '';
+          let lyricLine = line.lyrics || '';
+          
+          line.chords.forEach(chordInfo => {
+            const position = chordInfo.position || 0;
+            while (chordLine.length < position) {
+              chordLine += ' ';
+            }
+            chordLine += chordInfo.chord;
+          });
+          
+          if (chordLine.trim()) {
+            output += chordLine + '\n';
+          }
+          if (lyricLine.trim()) {
+            output += lyricLine + '\n';
+          }
+        } else if (line.lyrics) {
+          output += line.lyrics + '\n';
+        }
+      });
+      
+      output += '\n';
     });
+
+    return output.trim();
   }
 }
