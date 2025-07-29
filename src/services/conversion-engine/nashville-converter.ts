@@ -181,3 +181,55 @@ export class NashvilleConverter {
     };
   }
 }
+import { NotationFormat } from '../../types/format';
+import { Chord } from '../../types/chord';
+
+export class NashvilleConverter {
+  /**
+   * Convert chord to Nashville notation
+   */
+  static convertToNashville(chord: Chord, key: string): string {
+    // Basic Nashville number conversion logic
+    const rootNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const keyIndex = rootNotes.indexOf(key);
+    const chordIndex = rootNotes.indexOf(chord.name.charAt(0));
+    
+    if (keyIndex === -1 || chordIndex === -1) {
+      return chord.name; // Return original if conversion fails
+    }
+    
+    let nashvilleNumber = ((chordIndex - keyIndex + 12) % 12) + 1;
+    if (nashvilleNumber === 0) nashvilleNumber = 12;
+    
+    // Handle chord modifiers (min, maj, etc.)
+    const modifiers = chord.name.slice(1);
+    const isMinor = modifiers.includes('m') && !modifiers.includes('maj');
+    
+    return isMinor ? `${nashvilleNumber}m` : `${nashvilleNumber}`;
+  }
+
+  /**
+   * Convert Nashville notation back to chord
+   */
+  static convertFromNashville(nashvilleChord: string, key: string): string {
+    const rootNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const keyIndex = rootNotes.indexOf(key);
+    
+    if (keyIndex === -1) {
+      return nashvilleChord; // Return original if conversion fails
+    }
+    
+    const match = nashvilleChord.match(/^(\d+)(.*)$/);
+    if (!match) {
+      return nashvilleChord;
+    }
+    
+    const number = parseInt(match[1]);
+    const modifiers = match[2];
+    
+    const chordIndex = (keyIndex + number - 1) % 12;
+    const rootNote = rootNotes[chordIndex];
+    
+    return rootNote + modifiers;
+  }
+}
