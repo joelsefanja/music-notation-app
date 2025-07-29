@@ -9,55 +9,49 @@ export enum LineType {
 }
 
 export interface BaseLine {
-  type: LineType;
   id: string;
+  type: LineType;
   content: string;
+  originalContent?: string;
 }
 
 export interface TextLine extends BaseLine {
   type: LineType.TEXT;
-  chords?: Array<{
-    position: number;
-    chord: string;
-  }>;
 }
 
 export interface EmptyLine extends BaseLine {
   type: LineType.EMPTY;
-  count?: number;
+  content: '';
 }
 
 export interface AnnotationLine extends BaseLine {
   type: LineType.ANNOTATION;
-  annotationType: 'comment' | 'directive' | 'instruction' | 'title' | 'artist' | 'key' | 'tempo' | 'capo';
+  annotationType?: string;
+  value?: string;
 }
 
 export interface ChordLyricsLine extends BaseLine {
   type: LineType.CHORD_LYRICS;
-  lyrics: string;
-  chords: Array<{
-    position: number;
-    chord: string;
-  }>;
+  chords?: string[];
+  lyrics?: string;
+  chordPositions?: number[];
 }
 
 export interface MetadataLine extends BaseLine {
   type: LineType.METADATA;
-  key: string;
-  value: string;
+  key?: string;
+  value?: string;
 }
 
 export interface SectionHeaderLine extends BaseLine {
   type: LineType.SECTION_HEADER;
-  sectionName: string;
-  sectionType: 'verse' | 'chorus' | 'bridge' | 'intro' | 'outro' | 'instrumental' | 'solo' | 'pre-chorus' | 'tag' | 'coda';
+  sectionType?: string;
+  sectionName?: string;
 }
 
 export type Line = TextLine | EmptyLine | AnnotationLine | ChordLyricsLine | MetadataLine | SectionHeaderLine;
 
-export interface LineRenderProps {
-  line: Line;
-  className?: string;
+export interface LineRenderOptions {
   showChords?: boolean;
   transposeKey?: string;
 }

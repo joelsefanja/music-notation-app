@@ -46,18 +46,9 @@ module.exports = withPWA({
     'localhost:3000',
     '127.0.0.1:3000'
   ],
-  // Optimalisaties voor snellere development builds
-  swcMinify: process.env.NODE_ENV !== 'development',
-  optimizeFonts: process.env.NODE_ENV !== 'development',
-  compress: process.env.NODE_ENV !== 'development',
-  
   // Experimentele features voor betere caching
   experimental: {
-    turbotrace: {
-      logLevel: 'error'
-    },
-    optimizePackageImports: ['react', 'react-dom'],
-    swcTraceProfiling: false
+    optimizePackageImports: ['react', 'react-dom']
   },
 
   webpack: (config, { isServer, dev }) => {
