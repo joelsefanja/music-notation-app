@@ -19,6 +19,10 @@ export class GuitarTabsParser extends BaseParser {
     return FormatValidatorFactory.getValidator(AnnotationFormat.GUITAR_TABS).isValid(text);
   }
 
+  public parse(text: string): any {
+    return super.parse(text);
+  }
+
   protected parseContentLine(line: string, lineNumber: number): TextLine | ChordLine {
     // Check if this is a chord line (contains only chords and whitespace)
     const chordPattern = /^[A-G][#b]?(?:maj|min|m|dim|aug|\+|°|sus[24]?|add\d+|\d+)*(?:\/[A-G][#b]?)?(?:\s+[A-G][#b]?(?:maj|min|m|dim|aug|\+|°|sus[24]?|add\d+|\d+)*(?:\/[A-G][#b]?)?)*\s*$/;
