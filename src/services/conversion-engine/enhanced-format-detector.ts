@@ -7,7 +7,7 @@ import {
   IFormatDetector, 
   FormatDetectionResult 
 } from '../../types/interfaces/core-interfaces';
-import { NotationFormat } from '../../types/line';
+import { NotationFormat } from '../../types/format';
 
 /**
  * Format detection patterns and scoring

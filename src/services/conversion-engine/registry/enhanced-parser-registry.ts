@@ -8,7 +8,7 @@ import {
   IParser, 
   IFormatValidator 
 } from '../../../types/interfaces/core-interfaces';
-import { NotationFormat } from '../../../types/line';
+import { NotationFormat } from '../../../types/format';
 import { ChordProParser } from '../format-parsers/formats/chordpro-parser';
 import { OnSongParser } from '../format-parsers/formats/onsong-parser';
 import { SongbookParser } from '../format-parsers/formats/songbook-parser';

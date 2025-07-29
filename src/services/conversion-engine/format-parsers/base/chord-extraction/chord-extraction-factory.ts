@@ -4,7 +4,7 @@ import { ChordProChordStrategy } from './chordpro-chord-strategy';
 import { SongbookChordStrategy } from './songbook-chord-strategy';
 import { NashvilleChordStrategy } from './nashville-chord-strategy';
 import { GuitarTabsChordStrategy } from './guitar-tabs-chord-strategy';
-import { AnnotationFormat } from '../../../../../types/line';
+import { AnnotationFormat } from '../../../../../types/format';
 
 /**
  * Factory for creating chord extraction strategies
