@@ -189,3 +189,18 @@ export interface LineValidationResult {
   isValid: boolean;
   errors?: string[];
 }
+
+// Export all the line types and interfaces
+export type { 
+  BaseLine, 
+  ChordLine, 
+  LyricLine, 
+  AnnotationLine,
+  Line,
+  TextLine,
+  EmptyLine,
+  Chord,
+  ChordPlacement,
+  NashvilleChord,
+  RhythmicSymbol
+};
