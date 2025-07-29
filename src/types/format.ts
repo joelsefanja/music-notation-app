@@ -7,7 +7,7 @@ export enum NotationFormat {
   SONGBOOK = 'songbook',
   CHORDPRO = 'chordpro',
   GUITAR_TABS = 'guitar_tabs',
-  PCO = "PCO"
+  PCO = 'pco'
 }
 
 /**

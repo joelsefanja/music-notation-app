@@ -238,7 +238,7 @@ export abstract class BaseParser {
    */
   protected isSectionHeader(line: string): boolean {
     const trimmed = line.trim();
-    
+
     // Sectiepatronen voor verschillende formaten
     const sectionPatterns = [
       /^\[(?:Verse|Chorus|Bridge|Intro|Outro|Pre-Chorus|Post-Chorus|Refrain|Tag|Vamp|Interlude|Solo|Break|Instrumental)(?:\s*\d+)?\]$/i,
@@ -254,7 +254,7 @@ export abstract class BaseParser {
    */
   protected parseSectionHeader(line: string): { type: string; title?: string } {
     const trimmed = line.trim();
-    
+
     // Patroon voor [Verse 1], [Chorus], etc.
     const bracketMatch = trimmed.match(/^\[([^[\]]+)\]$/i);
     if (bracketMatch) {

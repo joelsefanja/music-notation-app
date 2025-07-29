@@ -52,7 +52,7 @@ export class FormatDetector {
       const confidence = Math.min(tabMatches.length * 0.4, 1);
       if (confidence > maxConfidence) {
         maxConfidence = confidence;
-        detectedFormat = 'guitar-tabs';
+        detectedFormat = 'guitar_tabs';
         indicators.push('Guitar tab notation found');
       }
     }

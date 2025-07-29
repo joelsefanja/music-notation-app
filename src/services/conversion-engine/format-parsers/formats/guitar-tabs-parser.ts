@@ -1,5 +1,6 @@
 import { BaseParser } from '../base/base-parser';
 import { AnnotationFormat, TextLine, ChordLine } from '../../../../types/line';
+import { NotationFormat } from '../../../../types/format';
 import { FormatValidatorFactory } from '../base/validation/format-validator-factory';
 import { AnnotationPatterns } from '../base/annotation-patterns';
 import { Chord } from '../../../../types/chord';
@@ -9,6 +10,10 @@ import { Chord } from '../../../../types/chord';
  */
 export class GuitarTabsParser extends BaseParser {
   protected readonly annotationPatterns = AnnotationPatterns.getPatterns(AnnotationFormat.GUITAR_TABS);
+
+  public getSupportedFormat(): NotationFormat {
+    return NotationFormat.GUITAR_TABS;
+  }
 
   public isValid(text: string): boolean {
     return FormatValidatorFactory.getValidator(AnnotationFormat.GUITAR_TABS).isValid(text);
