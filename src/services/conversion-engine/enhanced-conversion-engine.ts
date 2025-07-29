@@ -42,7 +42,7 @@ export class EnhancedConversionEngine implements IConversionEngine {
    */
   async convert(request: IConversionRequest): Promise<ConversionResult> {
     const requestId = this.generateRequestId();
-    
+
     try {
       // Validate request
       const validationResult = this.validateRequest(request);
@@ -120,7 +120,7 @@ export class EnhancedConversionEngine implements IConversionEngine {
 
     } catch (error) {
       const conversionError = this.createConversionError(error);
-      
+
       // Publish error event
       this.eventManager.publish(new ConversionErrorEvent(
         requestId,
@@ -130,7 +130,7 @@ export class EnhancedConversionEngine implements IConversionEngine {
 
       // Attempt error recovery
       const recoveryResult = await this.attemptErrorRecovery(conversionError, request);
-      
+
       return recoveryResult || this.createErrorResult([conversionError]);
     }
   }
@@ -139,6 +139,15 @@ export class EnhancedConversionEngine implements IConversionEngine {
    * Detect the format of input text
    */
   detectFormat(text: string): FormatDetectionResult {
+    // Validate input
+    if (text === null || text === undefined) {
+      throw new Error('Input text is required and must be a string');
+    }
+
+    if (typeof text !== 'string') {
+      throw new Error('Input text is required and must be a string');
+    }
+
     try {
       return this.formatDetector.detectFormat(text);
     } catch (error) {
@@ -313,7 +322,7 @@ export class EnhancedConversionEngine implements IConversionEngine {
 
     try {
       const parseResult = await parser.parse(input);
-      
+
       if (!parseResult.success || !parseResult.canonicalModel) {
         return {
           success: false,
@@ -392,7 +401,7 @@ export class EnhancedConversionEngine implements IConversionEngine {
     try {
       // Placeholder rendering logic
       const output = JSON.stringify(model, null, 2);
-      
+
       return {
         success: true,
         output,
@@ -472,7 +481,7 @@ export class EnhancedConversionEngine implements IConversionEngine {
   ): Promise<ConversionResult | null> {
     try {
       const recoveryResult = await this.errorRecovery.recover(error, request.input);
-      
+
       if (recoveryResult.success && recoveryResult.partialResult) {
         return {
           success: true,

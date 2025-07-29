@@ -5,7 +5,15 @@ import { FormatValidator } from './format-validator';
  */
 export class GuitarTabsValidator implements FormatValidator {
   isValid(text: string): boolean {
-    if (!text || typeof text !== 'string') return false;
+    if (text === null || text === undefined) {
+      throw new Error('Input text is required and must be a string');
+    }
+    
+    if (typeof text !== 'string') {
+      throw new Error('Input text is required and must be a string');
+    }
+    
+    if (text.trim().length === 0) return false;
     
     // Look for section headers [Intro] [Verse] [Chorus] - this is the primary indicator
     const hasSectionHeaders = /^\[(?:Intro|Verse|Chorus|Bridge|Outro|Solo|Pre-Chorus|Tag|Coda|Instrumental|Refrain|Break|Interlude)(?:\s+\d+)?\]$/mi.test(text);

@@ -32,7 +32,16 @@ export class EnhancedFormatDetector implements IFormatDetector {
    * Detect the most likely format of the input text
    */
   detectFormat(text: string): FormatDetectionResult {
-    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+    // Validate input
+    if (text === null || text === undefined) {
+      throw new Error('Input text is required and must be a string');
+    }
+    
+    if (typeof text !== 'string') {
+      throw new Error('Input text is required and must be a string');
+    }
+    
+    if (text.trim().length === 0) {
       return {
         format: NotationFormat.ONSONG, // Default fallback
         confidence: 0
@@ -50,6 +59,15 @@ export class EnhancedFormatDetector implements IFormatDetector {
    * Detect all possible formats with confidence scores
    */
   detectAllFormats(text: string): FormatDetectionResult[] {
+    // Validate input
+    if (text === null || text === undefined) {
+      throw new Error('Input text is required and must be a string');
+    }
+    
+    if (typeof text !== 'string') {
+      throw new Error('Input text is required and must be a string');
+    }
+    
     const results: FormatDetectionResult[] = [];
     const normalizedText = this.normalizeText(text);
 
