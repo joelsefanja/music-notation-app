@@ -40,7 +40,35 @@ export class EnhancedConversionEngine implements IConversionEngine {
   /**
    * Convert music notation from one format to another
    */
-  async convert(request: IConversionRequest): Promise<ConversionResult> {
+  async convert(
+    requestOrInput: IConversionRequest | string,
+    sourceFormat?: any,
+    targetFormat?: any,
+    sourceKey?: string,
+    targetKey?: string
+  ): Promise<ConversionResult> {
+    // Handle overloaded method signatures
+    let request: IConversionRequest;
+    
+    if (typeof requestOrInput === 'string') {
+      // Legacy method signature - convert parameters to request object
+      request = {
+        input: requestOrInput,
+        sourceFormat,
+        targetFormat,
+        transposeOptions: sourceKey && targetKey && sourceKey !== targetKey ? {
+          fromKey: sourceKey,
+          toKey: targetKey
+        } : undefined,
+        conversionOptions: {
+          includeMetadata: true,
+          preserveFormatting: true
+        }
+      };
+    } else {
+      // New request object signature
+      request = requestOrInput;
+    }
     const requestId = this.generateRequestId();
 
     try {

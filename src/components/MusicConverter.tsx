@@ -103,18 +103,27 @@ export const MusicConverter: React.FC = () => {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
 
       try {
-        const result = await conversionEngine.convert(
-          debouncedInputText,
-          state.sourceFormat,
-          state.targetFormat,
-          state.sourceKey,
-          state.targetKey
-        );
+        // Create proper request object structure
+        const request = {
+          input: debouncedInputText,
+          sourceFormat: state.sourceFormat,
+          targetFormat: state.targetFormat,
+          transposeOptions: state.sourceKey !== state.targetKey ? {
+            fromKey: state.sourceKey,
+            toKey: state.targetKey
+          } : undefined,
+          conversionOptions: {
+            includeMetadata: true,
+            preserveFormatting: true
+          }
+        };
+
+        const result = await conversionEngine.convert(request);
 
         setState(prev => ({
           ...prev,
           outputText: result.output,
-          error: result.errors.length > 0 ? result.errors[0].message : null,
+          error: result.errors && result.errors.length > 0 ? result.errors[0].message : null,
           isLoading: false
         }));
       } catch (error) {

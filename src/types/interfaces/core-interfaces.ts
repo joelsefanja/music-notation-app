@@ -265,6 +265,13 @@ export type EventHandler<T extends DomainEvent> = (event: T) => void | Promise<v
  */
 export interface IConversionEngine {
   convert(request: IConversionRequest): Promise<ConversionResult>;
+  convert(
+    input: string,
+    sourceFormat: any,
+    targetFormat: any,
+    sourceKey?: string,
+    targetKey?: string
+  ): Promise<ConversionResult>;
   detectFormat(text: string): FormatDetectionResult;
   detectKey(text: string): KeyDetectionResult;
 }
