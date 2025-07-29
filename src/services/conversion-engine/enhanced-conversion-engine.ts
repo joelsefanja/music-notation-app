@@ -140,12 +140,12 @@ export class EnhancedConversionEngine implements IConversionEngine {
    */
   detectFormat(text: string): FormatDetectionResult {
     // Validate input
-    if (text === null || text === undefined) {
+    if (text === null || text === undefined || typeof text !== 'string') {
       throw new Error('Input text is required and must be a string');
     }
 
-    if (typeof text !== 'string') {
-      throw new Error('Input text is required and must be a string');
+    if (text.trim().length === 0) {
+      throw new Error('Input text cannot be empty');
     }
 
     try {
@@ -205,15 +205,13 @@ export class EnhancedConversionEngine implements IConversionEngine {
   private validateRequest(request: IConversionRequest): { isValid: boolean; errors: ConversionError[] } {
     const errors: ConversionError[] = [];
 
-    if (!request.input || typeof request.input !== 'string') {
+    if (typeof request.input !== 'string') {
       errors.push({
         type: ConversionErrorType.VALIDATION_ERROR,
         message: 'Input text is required and must be a string',
         recoverable: false
       });
-    }
-
-    if (request.input && request.input.trim().length === 0) {
+    } else if (request.input.trim().length === 0) {
       errors.push({
         type: ConversionErrorType.VALIDATION_ERROR,
         message: 'Input text cannot be empty',
