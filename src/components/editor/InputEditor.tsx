@@ -1,55 +1,58 @@
+
 'use client';
 
-import React, { useCallback } from 'react';
+import React from 'react';
+import { motion } from 'framer-motion';
 
 interface InputEditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  disabled?: boolean;
+  isLoading?: boolean;
+  height?: string;
+  className?: string;
 }
 
 export const InputEditor: React.FC<InputEditorProps> = ({
   value,
   onChange,
-  placeholder = "Paste your chord sheet here...",
-  disabled = false
+  placeholder = "Enter your music notation here...",
+  isLoading = false,
+  height = "320px",
+  className = ""
 }) => {
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    onChange(e.target.value);
-  }, [onChange]);
-
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-shrink-0 px-4 py-2 bg-gray-100 dark:bg-dark-surface border-b border-gray-200 dark:border-dark-border">
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Input</h3>
-      </div>
-      <div className="flex-1 relative">
-        <textarea
-          value={value}
-          onChange={handleChange}
-          placeholder={placeholder}
-          disabled={disabled}
-          className="
-            w-full h-full p-4 font-mono text-sm border-0 resize-none 
-            focus:outline-none focus:ring-0 
-            bg-white dark:bg-dark-bg
-            text-gray-900 dark:text-dark-text
-            placeholder-gray-500 dark:placeholder-gray-400
-            disabled:bg-gray-50 dark:disabled:bg-gray-800 
-            disabled:text-gray-500 dark:disabled:text-gray-400
-            transition-colors duration-200
-          "
-          style={{
-            fontFamily: 'JetBrains Mono, Consolas, Monaco, "Courier New", monospace',
-            lineHeight: '1.5',
-            tabSize: 2
-          }}
-          spellCheck={false}
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-        />
+    <div className={`relative ${className}`}>
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={`
+          w-full p-4 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-sm 
+          border-2 border-gray-200/50 dark:border-gray-700/50 rounded-xl
+          resize-none focus:outline-none focus:ring-4 focus:ring-blue-500/30 
+          focus:border-blue-500/50 dark:focus:border-blue-400/50 
+          text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 
+          font-mono text-sm leading-relaxed transition-all shadow-inner
+          ${isLoading ? 'opacity-50 pointer-events-none' : ''}
+        `}
+        style={{ height }}
+        disabled={isLoading}
+      />
+      
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-xl flex items-center justify-center">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full"
+          />
+        </div>
+      )}
+      
+      {/* Character count */}
+      <div className="absolute bottom-2 right-2 text-xs text-gray-400 dark:text-gray-500 bg-white/80 dark:bg-gray-800/80 px-2 py-1 rounded">
+        {value.length} chars
       </div>
     </div>
   );

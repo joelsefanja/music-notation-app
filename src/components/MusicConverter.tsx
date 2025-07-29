@@ -1,11 +1,31 @@
+
+'use client';
+
 import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { NotationFormat } from '../types';
-import { FormatDetectionResult } from '../services/format-detector';
-import { KeyDetectionResult } from '../services/key-detector';
 import { useDebounce } from '../hooks/useDebounce';
+import { useResponsive } from '../hooks/useResponsive';
 import { useContainer } from '../hooks/useContainer';
 import { DI_TOKENS } from '../services/dependency-injection/dependency-container';
 import { IConversionEngine } from '../types/interfaces/core-interfaces';
+
+// Component imports
+import { InputEditor } from './editor/InputEditor';
+import { OutputPreview } from './editor/OutputPreview';
+import { EditorToolbar } from './editor/EditorToolbar';
+import { FormatSelector } from './controls/FormatSelector';
+import { KeySelector } from './controls/KeySelector';
+import { CopyToClipboard } from './controls/CopyToClipboard';
+import { FileExportButton } from './controls/FileExportButton';
+import { FileImportButton } from './controls/FileImportButton';
+import { ThemeToggle } from './controls/ThemeToggle';
+import { ErrorDisplay } from './feedback/ErrorDisplay';
+import { LoadingSpinner } from './feedback/LoadingSpinner';
+import { StatusIndicator } from './feedback/StatusIndicator';
+import { ProgressIndicator } from './feedback/ProgressIndicator';
+import { MetadataDisplay } from './metadata/MetadataDisplay';
+import { FormatTransition } from './animations/FormatTransition';
 
 interface ConversionState {
   inputText: string;
@@ -19,11 +39,14 @@ interface ConversionState {
   targetFormat: NotationFormat;
   sourceKey: string;
   targetKey: string;
+  metadata: any;
+  progress: number;
 }
 
 export const MusicConverter: React.FC = () => {
   const container = useContainer();
   const conversionEngine = container.resolve<IConversionEngine>(DI_TOKENS.CONVERSION_ENGINE);
+  const { isMobile, isTablet, breakpoint } = useResponsive();
 
   const [state, setState] = useState<ConversionState>({
     inputText: '',
@@ -36,13 +59,16 @@ export const MusicConverter: React.FC = () => {
     sourceFormat: NotationFormat.CHORDPRO,
     targetFormat: NotationFormat.GUITAR_TABS,
     sourceKey: 'C',
-    targetKey: 'C'
+    targetKey: 'C',
+    metadata: null,
+    progress: 0
   });
 
   const [showOutput, setShowOutput] = useState(false);
-  const debouncedInputText = useDebounce(state.inputText, 500);
+  const [activeTab, setActiveTab] = useState<'input' | 'output'>('input');
+  const debouncedInputText = useDebounce(state.inputText, 300);
 
-  // Auto-detect format and key when input changes
+  // Auto-detect format and key
   useEffect(() => {
     if (!debouncedInputText.trim()) {
       setState(prev => ({
@@ -51,7 +77,9 @@ export const MusicConverter: React.FC = () => {
         detectedKey: null,
         detectedConfidence: 0,
         outputText: '',
-        error: null
+        error: null,
+        metadata: null,
+        progress: 0
       }));
       setShowOutput(false);
       return;
@@ -67,19 +95,20 @@ export const MusicConverter: React.FC = () => {
         detectedKey: keyDetection.key + (keyDetection.isMinor ? 'm' : ''),
         detectedConfidence: formatDetection.confidence,
         sourceFormat: formatDetection.format as NotationFormat,
-        sourceKey: keyDetection.key + (keyDetection.isMinor ? 'm' : '')
+        sourceKey: keyDetection.key + (keyDetection.isMinor ? 'm' : ''),
+        progress: 25
       }));
     } catch (error) {
       console.error('Detection error:', error);
     }
   }, [debouncedInputText, conversionEngine]);
 
-  // Perform conversion when parameters change
+  // Perform conversion
   useEffect(() => {
     if (!debouncedInputText.trim()) return;
 
     const performConversion = async () => {
-      setState(prev => ({ ...prev, isConverting: true, error: null }));
+      setState(prev => ({ ...prev, isConverting: true, error: null, progress: 50 }));
 
       try {
         const request = {
@@ -102,17 +131,23 @@ export const MusicConverter: React.FC = () => {
           ...prev,
           outputText: result.output,
           error: result.errors && result.errors.length > 0 ? result.errors[0].message : null,
-          isConverting: false
+          isConverting: false,
+          metadata: result.metadata,
+          progress: 100
         }));
 
         if (result.success && result.output) {
           setShowOutput(true);
+          if (isMobile) {
+            setActiveTab('output');
+          }
         }
       } catch (error) {
         setState(prev => ({
           ...prev,
           error: error instanceof Error ? error.message : 'Conversion failed',
-          isConverting: false
+          isConverting: false,
+          progress: 0
         }));
       }
     };
@@ -124,15 +159,21 @@ export const MusicConverter: React.FC = () => {
     state.targetFormat,
     state.sourceKey,
     state.targetKey,
-    conversionEngine
+    conversionEngine,
+    isMobile
   ]);
 
   const handleInputChange = useCallback((value: string) => {
     setState(prev => ({ ...prev, inputText: value }));
     if (!value.trim()) {
       setShowOutput(false);
+      setActiveTab('input');
     }
   }, []);
+
+  const handleFileImport = useCallback((content: string) => {
+    handleInputChange(content);
+  }, [handleInputChange]);
 
   const formatDisplayNames = {
     [NotationFormat.CHORDPRO]: 'ChordPro',
@@ -143,174 +184,274 @@ export const MusicConverter: React.FC = () => {
     [NotationFormat.PLANNING_CENTER]: 'Planning Center'
   };
 
-  const keys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'Cm', 'C#m', 'Dm', 'D#m', 'Em', 'Fm', 'F#m', 'Gm', 'G#m', 'Am', 'A#m', 'Bm'];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-purple-900 dark:to-indigo-950 p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
-            🎵 Music Converter
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300 text-lg">
-            Convert chord sheets instantly between formats
-          </p>
-        </div>
-
-        {/* Detection Status */}
-        {state.detectedFormat && (
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-3xl p-6 mb-6 shadow-xl border border-white/20 dark:border-gray-700/30">
-            <div className="flex flex-wrap items-center justify-center gap-4">
-              <div className="flex items-center bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-6 py-3 rounded-full shadow-md">
-                <div className="w-3 h-3 bg-green-500 rounded-full mr-3 animate-pulse"></div>
-                <span className="font-semibold">
-                  {formatDisplayNames[state.detectedFormat]} ({Math.round(state.detectedConfidence * 100)}%)
-                </span>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-indigo-950">
+      {/* Mobile Header */}
+      <header className="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">🎵</span>
               </div>
-              {state.detectedKey && (
-                <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-6 py-3 rounded-full shadow-md font-semibold">
-                  Key: {state.detectedKey}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Error Display */}
-        {state.error && (
-          <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-3xl p-6 mb-6 shadow-xl">
-            <div className="flex items-start">
-              <div className="flex-shrink-0 mr-4">
-                <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                </div>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-red-800 dark:text-red-300 mb-2">Conversion Error</h3>
-                <p className="text-red-700 dark:text-red-400 mb-4">{state.error}</p>
-                <button
-                  onClick={() => setState(prev => ({ ...prev, error: null }))}
-                  className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-full font-semibold transition-all transform hover:scale-105 shadow-lg"
-                >
-                  Dismiss
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Main Content */}
-        <div className="space-y-6">
-          {/* Input Section */}
-          <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/30 dark:border-gray-700/30 overflow-hidden">
-            {/* Input Header */}
-            <div className="bg-gradient-to-r from-purple-500 via-blue-500 to-indigo-500 p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <h2 className="text-xl font-bold text-white flex items-center">
-                  <span className="mr-3">📝</span>
-                  Enter Your Music
-                </h2>
-
-                {/* Format Controls */}
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <select
-                    value={state.targetFormat}
-                    onChange={(e) => setState(prev => ({ ...prev, targetFormat: e.target.value as NotationFormat }))}
-                    className="bg-white/20 backdrop-blur-sm border border-white/30 text-white rounded-2xl px-4 py-3 font-semibold focus:outline-none focus:ring-4 focus:ring-white/30 transition-all appearance-none cursor-pointer"
-                  >
-                    {Object.entries(formatDisplayNames).map(([value, label]) => (
-                      <option key={value} value={value} className="text-gray-900 bg-white">
-                        Convert to {label}
-                      </option>
-                    ))}
-                  </select>
-
-                  <select
-                    value={state.targetKey}
-                    onChange={(e) => setState(prev => ({ ...prev, targetKey: e.target.value }))}
-                    className="bg-white/20 backdrop-blur-sm border border-white/30 text-white rounded-2xl px-4 py-3 font-semibold focus:outline-none focus:ring-4 focus:ring-white/30 transition-all appearance-none cursor-pointer"
-                  >
-                    {keys.map(key => (
-                      <option key={key} value={key} className="text-gray-900 bg-white">
-                        Key: {key}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Input Area */}
-            <div className="p-8">
-              <div className="relative">
-                <textarea
-                  value={state.inputText}
-                  onChange={(e) => handleInputChange(e.target.value)}
-                  placeholder="🎶 Paste your chord sheet here...
-
-Try formats like:
-• ChordPro: {title: Amazing Grace} [C]Amazing [F]grace
-• Guitar Tabs: [Verse] C F G Am  
-• OnSong: Title: Amazing Grace | C-F-G-Am"
-                  className="w-full h-80 p-6 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-sm border-2 border-gray-200/50 dark:border-gray-700/50 rounded-3xl resize-none focus:outline-none focus:ring-4 focus:ring-purple-500/30 focus:border-purple-500/50 dark:focus:border-purple-400/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 font-mono text-sm leading-relaxed transition-all shadow-inner"
-                />
-
-                {state.isConverting && (
-                  <div className="absolute inset-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-3xl flex items-center justify-center">
-                    <div className="flex items-center space-x-4 bg-white dark:bg-gray-800 px-8 py-4 rounded-2xl shadow-xl">
-                      <div className="animate-spin rounded-full h-8 w-8 border-4 border-purple-500 border-t-transparent"></div>
-                      <span className="text-purple-600 dark:text-purple-400 font-bold text-lg">Converting...</span>
-                    </div>
-                  </div>
+              <div>
+                <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+                  Music Converter
+                </h1>
+                {!isMobile && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Convert chord sheets instantly
+                  </p>
                 )}
               </div>
             </div>
+            <div className="flex items-center space-x-2">
+              <ThemeToggle />
+              {!isMobile && (
+                <StatusIndicator 
+                  status={state.isConverting ? 'processing' : state.error ? 'error' : 'ready'} 
+                />
+              )}
+            </div>
           </div>
 
-          {/* Output Section */}
-          {showOutput && state.outputText && (
-            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/30 dark:border-gray-700/30 overflow-hidden transform transition-all duration-500 animate-in slide-in-from-bottom-4">
-              {/* Output Header */}
-              <div className="bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 p-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <h2 className="text-xl font-bold text-white flex items-center">
-                    <span className="mr-3">✨</span>
-                    Converted to {formatDisplayNames[state.targetFormat]}
-                  </h2>
+          {/* Progress Bar */}
+          {state.progress > 0 && state.progress < 100 && (
+            <div className="mt-2">
+              <ProgressIndicator progress={state.progress} />
+            </div>
+          )}
+        </div>
 
-                  {/* Copy Button */}
-                  <button
-                    onClick={() => navigator.clipboard.writeText(state.outputText)}
-                    className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-6 py-3 rounded-2xl font-semibold transition-all transform hover:scale-105 shadow-lg flex items-center"
-                  >
-                    <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                    Copy
-                  </button>
+        {/* Mobile Tab Navigation */}
+        {isMobile && (
+          <div className="px-4 pb-3">
+            <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+              <button
+                onClick={() => setActiveTab('input')}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                  activeTab === 'input'
+                    ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                    : 'text-gray-600 dark:text-gray-400'
+                }`}
+              >
+                Input
+              </button>
+              <button
+                onClick={() => setActiveTab('output')}
+                disabled={!showOutput}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                  activeTab === 'output' && showOutput
+                    ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                    : 'text-gray-400 dark:text-gray-500'
+                }`}
+              >
+                Output {showOutput && <span className="ml-1 text-green-500">✓</span>}
+              </button>
+            </div>
+          </div>
+        )}
+      </header>
+
+      <main className="px-4 py-6 max-w-7xl mx-auto">
+        {/* Detection Status */}
+        <AnimatePresence>
+          {state.detectedFormat && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="mb-6"
+            >
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-4 shadow-lg border border-white/20 dark:border-gray-700/30">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center space-x-3">
+                    <StatusIndicator status="success" size="sm" />
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                        {formatDisplayNames[state.detectedFormat]}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {Math.round(state.detectedConfidence * 100)}% confidence
+                        {state.detectedKey && ` • Key: ${state.detectedKey}`}
+                      </div>
+                    </div>
+                  </div>
+                  {state.metadata && (
+                    <MetadataDisplay metadata={state.metadata} compact />
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Error Display */}
+        <AnimatePresence>
+          {state.error && (
+            <div className="mb-6">
+              <ErrorDisplay 
+                error={state.error} 
+                onDismiss={() => setState(prev => ({ ...prev, error: null }))} 
+              />
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Controls */}
+        <div className="mb-6 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/30 dark:border-gray-700/30">
+          <EditorToolbar>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <FormatSelector
+                value={state.targetFormat}
+                onChange={(format) => setState(prev => ({ ...prev, targetFormat: format }))}
+                label="Convert to"
+              />
+              <KeySelector
+                value={state.targetKey}
+                onChange={(key) => setState(prev => ({ ...prev, targetKey: key }))}
+                label="Target Key"
+              />
+              <div className="flex space-x-2">
+                <FileImportButton onFileContent={handleFileImport} />
+                {showOutput && (
+                  <FileExportButton 
+                    content={state.outputText} 
+                    format={state.targetFormat} 
+                  />
+                )}
+              </div>
+              {showOutput && (
+                <CopyToClipboard text={state.outputText} />
+              )}
+            </div>
+          </EditorToolbar>
+        </div>
+
+        {/* Editor Content */}
+        <div className="space-y-6">
+          {/* Desktop Layout */}
+          {!isMobile && (
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Input Section */}
+              <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/30 dark:border-gray-700/30 overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 p-4">
+                  <h2 className="text-lg font-bold text-white flex items-center">
+                    <span className="mr-2">📝</span>
+                    Input Editor
+                  </h2>
+                </div>
+                <div className="p-6">
+                  <InputEditor
+                    value={state.inputText}
+                    onChange={handleInputChange}
+                    placeholder="🎶 Paste your chord sheet here..."
+                    isLoading={state.isConverting}
+                  />
                 </div>
               </div>
 
-              {/* Output Area */}
-              <div className="p-8">
-                <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-900 dark:text-white bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-sm p-6 rounded-3xl overflow-x-auto border-2 border-gray-200/50 dark:border-gray-700/50 shadow-inner">
-                  {state.outputText}
-                </pre>
+              {/* Output Section */}
+              <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/30 dark:border-gray-700/30 overflow-hidden">
+                <div className="bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 p-4">
+                  <h2 className="text-lg font-bold text-white flex items-center">
+                    <span className="mr-2">✨</span>
+                    {formatDisplayNames[state.targetFormat]}
+                  </h2>
+                </div>
+                <div className="p-6">
+                  {showOutput ? (
+                    <FormatTransition currentFormat={state.targetFormat}>
+                      <OutputPreview content={state.outputText} format={state.targetFormat} />
+                    </FormatTransition>
+                  ) : (
+                    <div className="h-80 flex items-center justify-center text-gray-400 dark:text-gray-500">
+                      <div className="text-center">
+                        <div className="text-4xl mb-2">🎼</div>
+                        <p>Output will appear here</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
+            </div>
+          )}
+
+          {/* Mobile Layout */}
+          {isMobile && (
+            <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/30 dark:border-gray-700/30 overflow-hidden">
+              <AnimatePresence mode="wait">
+                {activeTab === 'input' && (
+                  <motion.div
+                    key="input"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 p-4">
+                      <h2 className="text-lg font-bold text-white flex items-center">
+                        <span className="mr-2">📝</span>
+                        Input Editor
+                      </h2>
+                    </div>
+                    <div className="p-4">
+                      <InputEditor
+                        value={state.inputText}
+                        onChange={handleInputChange}
+                        placeholder="🎶 Paste your chord sheet here..."
+                        isLoading={state.isConverting}
+                        height="400px"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+
+                {activeTab === 'output' && showOutput && (
+                  <motion.div
+                    key="output"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 p-4">
+                      <h2 className="text-lg font-bold text-white flex items-center">
+                        <span className="mr-2">✨</span>
+                        {formatDisplayNames[state.targetFormat]}
+                      </h2>
+                    </div>
+                    <div className="p-4">
+                      <FormatTransition currentFormat={state.targetFormat}>
+                        <OutputPreview content={state.outputText} format={state.targetFormat} />
+                      </FormatTransition>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Loading Overlay */}
+              {state.isConverting && (
+                <div className="absolute inset-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm flex items-center justify-center z-10">
+                  <LoadingSpinner size="lg" message="Converting..." />
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-12 text-gray-500 dark:text-gray-400">
-          <p className="text-sm">
-            Built with ❤️ for musicians • Support for ChordPro, Guitar Tabs, Nashville & more
-          </p>
-        </div>
-      </div>
+        <footer className="mt-12 text-center">
+          <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-white/20 dark:border-gray-700/30">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+              Built with ❤️ for musicians
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-500">
+              Support for ChordPro, Guitar Tabs, Nashville & more formats
+            </p>
+          </div>
+        </footer>
+      </main>
     </div>
   );
 };

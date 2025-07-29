@@ -1,206 +1,69 @@
 'use client';
 
 import React from 'react';
-import { FileMetadata } from '../../services/storage/storage-provider.interface';
 
 interface MetadataDisplayProps {
-  metadata: FileMetadata;
-  className?: string;
+  metadata: any;
   compact?: boolean;
+  className?: string;
 }
 
-/**
- * Component for displaying chord sheet metadata in read-only format
- */
 export const MetadataDisplay: React.FC<MetadataDisplayProps> = ({
   metadata,
-  className = '',
-  compact = false
+  compact = false,
+  className = ""
 }) => {
-  const hasMetadata = Object.values(metadata).some(value => 
-    value !== undefined && value !== null && value !== ''
-  );
+  if (!metadata) return null;
 
-  if (!hasMetadata) {
-    return (
-      <div className={`text-sm text-gray-500 italic ${className}`}>
-        No metadata available
-      </div>
-    );
-  }
+  const { title, artist, key, tempo, time_signature } = metadata;
 
   if (compact) {
     return (
-      <div className={`text-sm text-gray-700 ${className}`}>
-        {metadata.title && metadata.artist ? (
-          <div className="font-medium">
-            {metadata.title} - {metadata.artist}
-          </div>
-        ) : metadata.title ? (
-          <div className="font-medium">{metadata.title}</div>
-        ) : metadata.artist ? (
-          <div className="font-medium">{metadata.artist}</div>
-        ) : null}
-        
-        {metadata.key && (
-          <div className="text-xs text-gray-500 mt-1">
-            Key: {metadata.key}
-            {metadata.capo && metadata.capo > 0 && ` (Capo ${metadata.capo})`}
-          </div>
+      <div className={`flex items-center space-x-2 text-xs ${className}`}>
+        {title && (
+          <span className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
+            {title}
+          </span>
+        )}
+        {artist && (
+          <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded">
+            {artist}
+          </span>
         )}
       </div>
     );
   }
 
   return (
-    <div className={`bg-gray-50 border border-gray-200 rounded-lg p-4 ${className}`}>
-      <h3 className="text-sm font-medium text-gray-900 mb-3">Song Information</h3>
-      
-      <div className="space-y-2">
-        {/* Basic Information */}
-        {(metadata.title || metadata.artist) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {metadata.title && (
-              <div>
-                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  Title
-                </dt>
-                <dd className="text-sm text-gray-900 mt-1">{metadata.title}</dd>
-              </div>
-            )}
-            
-            {metadata.artist && (
-              <div>
-                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  Artist
-                </dt>
-                <dd className="text-sm text-gray-900 mt-1">{metadata.artist}</dd>
-              </div>
-            )}
+    <div className={`bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-2 ${className}`}>
+      <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Song Info</h4>
+      <div className="space-y-1">
+        {title && (
+          <div className="text-sm">
+            <span className="text-gray-500 dark:text-gray-400">Title:</span> {title}
           </div>
         )}
-
-        {/* Musical Information */}
-        {(metadata.key || metadata.tempo || metadata.capo || metadata.timeSignature) && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
-            {metadata.key && (
-              <div>
-                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  Key
-                </dt>
-                <dd className="text-sm text-gray-900 mt-1">{metadata.key}</dd>
-              </div>
-            )}
-            
-            {metadata.tempo && (
-              <div>
-                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  Tempo
-                </dt>
-                <dd className="text-sm text-gray-900 mt-1">{metadata.tempo} BPM</dd>
-              </div>
-            )}
-            
-            {metadata.capo !== undefined && metadata.capo > 0 && (
-              <div>
-                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  Capo
-                </dt>
-                <dd className="text-sm text-gray-900 mt-1">Fret {metadata.capo}</dd>
-              </div>
-            )}
-            
-            {metadata.timeSignature && (
-              <div>
-                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  Time Signature
-                </dt>
-                <dd className="text-sm text-gray-900 mt-1">{metadata.timeSignature}</dd>
-              </div>
-            )}
+        {artist && (
+          <div className="text-sm">
+            <span className="text-gray-500 dark:text-gray-400">Artist:</span> {artist}
           </div>
         )}
-
-        {/* Additional Information */}
-        {metadata.collection && (
-          <div className="pt-2">
-            <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Collection
-            </dt>
-            <dd className="text-sm text-gray-900 mt-1">{metadata.collection}</dd>
+        {key && (
+          <div className="text-sm">
+            <span className="text-gray-500 dark:text-gray-400">Key:</span> {key}
           </div>
         )}
-
-        {/* Tags */}
-        {metadata.tags && metadata.tags.length > 0 && (
-          <div className="pt-2">
-            <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-              Tags
-            </dt>
-            <dd className="flex flex-wrap gap-1">
-              {metadata.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                >
-                  {tag}
-                </span>
-              ))}
-            </dd>
+        {tempo && (
+          <div className="text-sm">
+            <span className="text-gray-500 dark:text-gray-400">Tempo:</span> {tempo}
           </div>
         )}
-
-        {/* Format Information */}
-        {metadata.originalFormat && (
-          <div className="pt-2">
-            <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Original Format
-            </dt>
-            <dd className="text-sm text-gray-900 mt-1 capitalize">
-              {metadata.originalFormat.replace('_', ' ')}
-            </dd>
-          </div>
-        )}
-
-        {/* Timestamps */}
-        {(metadata.dateCreated || metadata.lastModified) && (
-          <div className="pt-3 border-t border-gray-200 mt-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-500">
-              {metadata.dateCreated && (
-                <div>
-                  <dt className="font-medium text-gray-500 uppercase tracking-wide">
-                    Created
-                  </dt>
-                  <dd className="mt-1">
-                    {metadata.dateCreated.toLocaleDateString()} at{' '}
-                    {metadata.dateCreated.toLocaleTimeString([], { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
-                  </dd>
-                </div>
-              )}
-              
-              {metadata.lastModified && (
-                <div>
-                  <dt className="font-medium text-gray-500 uppercase tracking-wide">
-                    Last Modified
-                  </dt>
-                  <dd className="mt-1">
-                    {metadata.lastModified.toLocaleDateString()} at{' '}
-                    {metadata.lastModified.toLocaleTimeString([], { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
-                  </dd>
-                </div>
-              )}
-            </div>
+        {time_signature && (
+          <div className="text-sm">
+            <span className="text-gray-500 dark:text-gray-400">Time:</span> {time_signature}
           </div>
         )}
       </div>
     </div>
   );
 };
-
-export default MetadataDisplay;
