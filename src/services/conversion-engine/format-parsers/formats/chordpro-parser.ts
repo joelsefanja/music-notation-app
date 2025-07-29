@@ -1,5 +1,5 @@
 import { BaseLineParserWithChords } from '../base/base-line-parser-with-chords';
-import { AnnotationFormat } from '../../../../types/line';
+import { AnnotationFormat } from '../../../../types/format';
 import { FormatValidatorFactory } from '../base/validation/format-validator-factory';
 import { AnnotationPatterns } from '../base/annotation-patterns';
 

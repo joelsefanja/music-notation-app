@@ -1,4 +1,4 @@
-import { AnnotationFormat } from '../../../../types/line';
+import { AnnotationFormat } from '../../../../types/format';
 
 /**
  * Common annotation patterns for all formats

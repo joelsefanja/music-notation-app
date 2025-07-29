@@ -1,6 +1,6 @@
 import { BaseParser } from '../base/base-parser';
-import { AnnotationFormat, TextLine, ChordLine } from '../../../../types/line';
-import { NotationFormat } from '../../../../types/format';
+import { TextLine, ChordLine } from '../../../../types/line';
+import { AnnotationFormat, NotationFormat } from '../../../../types/format';
 import { FormatValidatorFactory } from '../base/validation/format-validator-factory';
 import { AnnotationPatterns } from '../base/annotation-patterns';
 import { Chord } from '../../../../types/chord';
@@ -25,18 +25,18 @@ export class GuitarTabsParser extends BaseParser {
 
   protected parseContentLine(line: string, lineNumber: number): TextLine | ChordLine {
     const trimmedLine = line.trim();
-    
+
     // Check if this is a chord line (contains only chords and whitespace)
     const chordPattern = /^[A-G][#b]?(?:maj|min|m|dim|aug|\+|°|sus[24]?|add\d+|\d+)*(?:\/[A-G][#b]?)?(?:\s+[A-G][#b]?(?:maj|min|m|dim|aug|\+|°|sus[24]?|add\d+|\d+)*(?:\/[A-G][#b]?)?)*\s*$/;
-    
+
     // Also check for single chord lines
     const singleChordPattern = /^[A-G][#b]?(?:maj|min|m|dim|aug|\+|°|sus[24]?|add\d+|\d+)*(?:\/[A-G][#b]?)?$/;
-    
+
     if (chordPattern.test(trimmedLine) || singleChordPattern.test(trimmedLine)) {
       // Parse as chord line
       const chords: Chord[] = [];
       const chordMatches = line.match(/[A-G][#b]?(?:maj|min|m|dim|aug|\+|°|sus[24]?|add\d+|\d+)*(?:\/[A-G][#b]?)?/g) || [];
-      
+
       let position = 0;
       for (const match of chordMatches) {
         const matchIndex = line.indexOf(match, position);

@@ -6,7 +6,7 @@ import { FormatValidator } from './format-validator';
 export class NashvilleValidator implements FormatValidator {
   isValid(text: string): boolean {
     if (!text || typeof text !== 'string') return false;
-    
+
     // Look for Nashville number patterns
     const nashvillePatterns = [
       /\b[1-7][#b]?[m°+]?(?:sus|add|maj|min)?[0-9]*(?:\/[1-7][#b]?)?\b/g,

@@ -5,7 +5,7 @@ import { SongbookValidator } from './songbook-validator';
 import { NashvilleValidator } from './nashville-validator';
 import { GuitarTabsValidator } from './guitar-tabs-validator';
 import { PlanningCenterValidator } from './planning-center-validator';
-import { AnnotationFormat } from '../../../../../types/line';
+import { AnnotationFormat } from '../../../../../types/format';
 
 /**
  * Factory for creating format validators
