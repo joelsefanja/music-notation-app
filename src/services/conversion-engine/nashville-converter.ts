@@ -1,4 +1,3 @@
-
 import { TextLine, AnnotationLine, Line } from '../../types/line';
 import { Chord } from '../../types/chord';
 
@@ -15,13 +14,13 @@ export class NashvilleConverter {
 
     const keyNote = key.charAt(0).toUpperCase();
     const keyOffset = noteToNumber[keyNote] || 1;
-    
+
     const chordRoot = chord.root.charAt(0).toUpperCase();
     const chordNumber = noteToNumber[chordRoot] || 1;
-    
+
     // Calculate relative number
     let nashvilleNumber = ((chordNumber - keyOffset + 7) % 7) + 1;
-    
+
     // Handle chord quality
     let quality = '';
     if (chord.quality === 'minor') {
@@ -31,13 +30,13 @@ export class NashvilleConverter {
     } else if (chord.quality === 'augmented') {
       quality = '+';
     }
-    
+
     // Add extensions if present
     let extensions = '';
     if (chord.extensions && chord.extensions.length > 0) {
       extensions = chord.extensions.join('');
     }
-    
+
     return `${nashvilleNumber}${quality}${extensions}`;
   }
 
@@ -57,22 +56,22 @@ export class NashvilleConverter {
 
     const keyNote = key.charAt(0).toUpperCase();
     const scale = numberToNote[keyNote] || numberToNote['C'];
-    
+
     // Parse Nashville notation
     const match = nashville.match(/^(\d+)([m°+]?)(.*)$/);
     if (!match) {
       throw new Error(`Invalid Nashville notation: ${nashville}`);
     }
-    
+
     const [, numberStr, qualitySymbol, extensions] = match;
     const number = parseInt(numberStr, 10);
-    
+
     if (number < 1 || number > 7) {
       throw new Error(`Invalid Nashville number: ${number}`);
     }
-    
+
     const root = scale[number - 1];
-    
+
     let quality: 'major' | 'minor' | 'diminished' | 'augmented' = 'major';
     if (qualitySymbol === 'm') {
       quality = 'minor';
@@ -81,7 +80,7 @@ export class NashvilleConverter {
     } else if (qualitySymbol === '+') {
       quality = 'augmented';
     }
-    
+
     return {
       root,
       quality,
@@ -136,7 +135,7 @@ export class NashvilleConverter {
         // Parse the chord string into a Chord object
         const chordObj = this.parseChordString(chord.chord);
         const nashvilleNotation = this.convertChordToNashville(chordObj, key);
-        
+
         return {
           ...chord,
           chord: nashvilleNotation
@@ -163,7 +162,7 @@ export class NashvilleConverter {
     }
 
     const [, root, qualitySymbol, extensions] = match;
-    
+
     let quality: 'major' | 'minor' | 'diminished' | 'augmented' = 'major';
     if (qualitySymbol === 'm') {
       quality = 'minor';
@@ -180,56 +179,25 @@ export class NashvilleConverter {
       bass: undefined
     };
   }
-}
-import { NotationFormat } from '../../types/format';
-import { Chord } from '../../types/chord';
 
-export class NashvilleConverter {
   /**
-   * Convert chord to Nashville notation
+   * Convert chord to Nashville notation (static method for backwards compatibility)
    */
   static convertToNashville(chord: Chord, key: string): string {
-    // Basic Nashville number conversion logic
-    const rootNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const keyIndex = rootNotes.indexOf(key);
-    const chordIndex = rootNotes.indexOf(chord.name.charAt(0));
-    
-    if (keyIndex === -1 || chordIndex === -1) {
-      return chord.name; // Return original if conversion fails
-    }
-    
-    let nashvilleNumber = ((chordIndex - keyIndex + 12) % 12) + 1;
-    if (nashvilleNumber === 0) nashvilleNumber = 12;
-    
-    // Handle chord modifiers (min, maj, etc.)
-    const modifiers = chord.name.slice(1);
-    const isMinor = modifiers.includes('m') && !modifiers.includes('maj');
-    
-    return isMinor ? `${nashvilleNumber}m` : `${nashvilleNumber}`;
+    const instance = new NashvilleConverter();
+    return instance.convertChordToNashville(chord, key);
   }
 
   /**
-   * Convert Nashville notation back to chord
+   * Convert Nashville notation back to chord (static method for backwards compatibility)
    */
   static convertFromNashville(nashvilleChord: string, key: string): string {
-    const rootNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const keyIndex = rootNotes.indexOf(key);
-    
-    if (keyIndex === -1) {
+    const instance = new NashvilleConverter();
+    try {
+      const chord = instance.convertNashvilleToChord(nashvilleChord, key);
+      return `${chord.root}${chord.quality === 'minor' ? 'm' : chord.quality === 'diminished' ? '°' : chord.quality === 'augmented' ? '+' : ''}${chord.extensions?.join('') || ''}`;
+    } catch (error) {
       return nashvilleChord; // Return original if conversion fails
     }
-    
-    const match = nashvilleChord.match(/^(\d+)(.*)$/);
-    if (!match) {
-      return nashvilleChord;
-    }
-    
-    const number = parseInt(match[1]);
-    const modifiers = match[2];
-    
-    const chordIndex = (keyIndex + number - 1) % 12;
-    const rootNote = rootNotes[chordIndex];
-    
-    return rootNote + modifiers;
   }
 }
