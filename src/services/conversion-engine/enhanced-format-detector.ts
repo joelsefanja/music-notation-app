@@ -166,27 +166,37 @@ export class EnhancedFormatDetector implements IFormatDetector {
         description: 'Songbook parenthetical comments'
       },
       {
-        pattern: /^[A-G][#b]?[^\s]*\s+[A-G][#b]?[^\s]*\s+[A-G][#b]?[^\s]*\s+[A-G][#b]?[^\s]*$/m,
-        weight: 0.7,
-        description: 'Songbook chord line'
+        pattern: /^[A-G][#b]?(?:maj|min|m|dim|aug|\+|°|sus[24]?|add\d+|\d+)*(?:\/[A-G][#b]?)?\s+[A-G][#b]?(?:maj|min|m|dim|aug|\+|°|sus[24]?|add\d+|\d+)*(?:\/[A-G][#b]?)?\s+[A-G][#b]?(?:maj|min|m|dim|aug|\+|°|sus[24]?|add\d+|\d+)*(?:\/[A-G][#b]?)?/m,
+        weight: 0.85,
+        description: 'Songbook chord line above lyrics'
+      },
+      {
+        pattern: /^[A-G][#b]?(?:maj|min|m|dim|aug|\+|°|sus[24]?|add\d+|\d+)*(?:\/[A-G][#b]?)?\s*$/m,
+        weight: 0.6,
+        description: 'Single chord line in Songbook format'
       }
     ]);
 
     // Guitar Tabs patterns
     this.formatPatterns.set(NotationFormat.GUITAR_TABS, [
       {
+        pattern: /^\[(?:Intro|Verse|Chorus|Bridge|Outro|Solo|Pre-Chorus|Tag|Coda|Instrumental|Refrain|Break|Interlude)(?:\s+\d+)?\]$/mi,
+        weight: 0.95,
+        description: 'Guitar tabs section headers in brackets'
+      },
+      {
         pattern: /^[eEbBgGdDaA][\|\-\d\s]+$/m,
-        weight: 0.9,
+        weight: 0.8,
         description: 'Guitar tab string notation'
       },
       {
         pattern: /^\s*\d+[\-\d\s]*\d+\s*$/m,
-        weight: 0.7,
+        weight: 0.6,
         description: 'Guitar tab fret numbers'
       },
       {
         pattern: /[h^p~\/\\]/g,
-        weight: 0.6,
+        weight: 0.4,
         description: 'Guitar tab technique symbols'
       }
     ]);
@@ -237,11 +247,41 @@ export class EnhancedFormatDetector implements IFormatDetector {
       }
     }
 
+    // Apply format-specific adjustments
+    totalScore = this.applyFormatSpecificAdjustments(text, totalScore, patterns);
+
     // Normalize to 0-1 range
     const confidence = maxPossibleScore > 0 ? Math.min(1, totalScore / maxPossibleScore) : 0;
     
     // Apply minimum threshold
     return confidence > 0.1 ? confidence : 0;
+  }
+
+  /**
+   * Apply format-specific confidence adjustments
+   */
+  private applyFormatSpecificAdjustments(text: string, score: number, patterns: FormatPattern[]): number {
+    // Check if this is for Songbook format and if Guitar Tabs section headers are present
+    const isSongbookPatterns = patterns.some(p => p.description.includes('Songbook'));
+    if (isSongbookPatterns) {
+      // If text has Guitar Tabs section headers, heavily penalize Songbook confidence
+      const hasGuitarTabsSections = /^\[(?:Intro|Verse|Chorus|Bridge|Outro|Solo|Pre-Chorus|Tag|Coda|Instrumental|Refrain|Break|Interlude)(?:\s+\d+)?\]$/mi.test(text);
+      if (hasGuitarTabsSections) {
+        score *= 0.1; // Heavily reduce Songbook confidence
+      }
+    }
+
+    // Check if this is for Guitar Tabs format
+    const isGuitarTabsPatterns = patterns.some(p => p.description.includes('Guitar tabs'));
+    if (isGuitarTabsPatterns) {
+      // Boost confidence if section headers are present
+      const hasGuitarTabsSections = /^\[(?:Intro|Verse|Chorus|Bridge|Outro|Solo|Pre-Chorus|Tag|Coda|Instrumental|Refrain|Break|Interlude)(?:\s+\d+)?\]$/mi.test(text);
+      if (hasGuitarTabsSections) {
+        score *= 1.5; // Boost Guitar Tabs confidence when section headers are present
+      }
+    }
+
+    return score;
   }
 
   /**
