@@ -1,4 +1,5 @@
-import { AnnotationFormat, AnnotationLine, EmptyLine, Line, TextLine } from '../../../../types/line';
+import { AnnotationLine, EmptyLine, Line, TextLine } from '../../../../types/line';
+import { AnnotationFormat } from '../../../../types/format';
 import { ConversionError, ConversionErrorFactory } from '../../../../types/conversion-error';
 import { ErrorRecoveryService } from '../../error-recovery/error-recovery-service';
 import { LineProcessorFactory } from './parsing/line-processor-factory'; 
