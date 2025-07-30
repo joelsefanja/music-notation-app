@@ -39,8 +39,8 @@ export const FormatSelector: React.FC<FormatSelectorProps> = ({
           text-gray-900 dark:text-white text-sm transition-colors
         "
       >
-        {formatOptions.map(option => (
-          <option key={option.value} value={option.value}>
+        {formatOptions.map((option, index) => (
+          <option key={`${option.value}-${index}`} value={option.value}>
             {option.label}
           </option>
         ))}

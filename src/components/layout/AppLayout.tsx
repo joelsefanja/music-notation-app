@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import './globals.css';
 import { ThemeToggle } from '../controls/ThemeToggle';
 
 interface AppLayoutProps {
